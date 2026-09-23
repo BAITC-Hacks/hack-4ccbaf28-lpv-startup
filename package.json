@@ -12,6 +12,7 @@
     "format": "prettier --write src scripts tests next.config.ts tsconfig.json package.json",
     "format:check": "prettier --check src scripts tests next.config.ts tsconfig.json package.json",
     "verify:dod": "node --import tsx scripts/verify-dod.ts",
+    "verify:spec": "node --import tsx scripts/verify-spec.ts",
     "verify:dod:live": "node --env-file=.env.local --import tsx scripts/verify-dod.ts --live"
   },
   "dependencies": {

@@ -15,6 +15,11 @@ const has = (values: string[], value: string) =>
   values.some((v) => equals(v, value));
 export const money = (n: number) =>
   new Intl.NumberFormat("ru-RU").format(n) + " ₸";
+const plural = new Intl.PluralRules("ru-RU");
+const variantCount = (count: number) => {
+  const form = plural.select(count);
+  return `${count} ${form === "one" ? "подходящий вариант" : form === "few" ? "подходящих варианта" : "подходящих вариантов"}`;
+};
 
 export function rejectionReasons(
   c: Contractor,
@@ -69,7 +74,7 @@ export function rank(c: Contractor, q: SearchQuery): RankedMatch {
   const preferences = normalize(q.preferences ?? "");
   const description = normalize(c.description);
   const quietConflict =
-    /тих|спокойн|формальн/.test(preferences) &&
+    /тих|спокойн|ненавязчив|камерн|формальн/.test(preferences) &&
     /тихий,? формальный вечер.{0,45}не подой/s.test(description);
   const evidence: MatchEvidence[] = [
     {
@@ -92,7 +97,7 @@ export function rank(c: Contractor, q: SearchQuery): RankedMatch {
       criterion: "duration",
       fact:
         c.max_hours === null
-          ? "Услуга не ограничена часами присутствия"
+          ? "Услуга не привязана к часам присутствия; null не означает круглосуточную работу"
           : `До ${c.max_hours} ч при запросе на ${q.hours} ч`,
     });
   let score = 100 + Math.round(10 * (1 - c.price_from_kzt / q.budget_kzt));
@@ -220,7 +225,7 @@ export function alternatives(
     ) {
       result.push({
         kind: "date",
-        label: `${next.split("-").reverse().join(".")}: ${Number.isFinite(baselinePrice) && nextPrice < baselinePrice ? `от ${money(nextPrice)} — дешевле на ${money(baselinePrice - nextPrice)}` : `${found.totalEligible} подходящих вариантов`}`,
+        label: `${next.split("-").reverse().join(".")}: ${Number.isFinite(baselinePrice) && nextPrice < baselinePrice ? `от ${money(nextPrice)} — дешевле на ${money(baselinePrice - nextPrice)}` : variantCount(found.totalEligible)}`,
         query,
         eligible: found.totalEligible,
       });
@@ -242,7 +247,7 @@ export function alternatives(
     if (found.status === "matched" && found.totalEligible > baselineCount) {
       result.push({
         kind: "budget",
-        label: `Бюджет ${money(price)}: ${found.totalEligible} вариантов${baselineCount ? ` (+${found.totalEligible - baselineCount})` : ""}`,
+        label: `Бюджет ${money(price)}: ${variantCount(found.totalEligible)}${baselineCount ? ` (+${found.totalEligible - baselineCount})` : ""}`,
         query,
         eligible: found.totalEligible,
       });

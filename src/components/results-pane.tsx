@@ -149,10 +149,10 @@ export default function ResultsPane({
             {result.notice && <p className="info-note">{result.notice}</p>}
             {result.result.status === "matched" ? (
               <>
+                {result.result.totalEligible < 3 && (
+                  <p className="supply-summary">{result.summary}</p>
+                )}
                 <p className="results-caption">
-                  {result.result.totalEligible < 3
-                    ? " Других, проходящих все условия, нет."
-                    : " "}{" "}
                   Все изображения — AI-иллюстрации.
                 </p>
                 <div className="cards-grid">
@@ -182,11 +182,7 @@ export default function ResultsPane({
                     ? "Такой категории в городе нет"
                     : "Никто не проходит все условия"}
                 </h3>
-                <p>
-                  {result.result.status === "no_category"
-                    ? `В городе «${result.query.city}» пока нет анкет категории «${result.query.category}». Попробуйте изменить город или категорию.`
-                    : `В городе есть ${result.result.candidatesInCity} анкет этой категории, но выбранные ограничения исключают их все. Причины — ниже.`}
-                </p>
+                <p>{result.summary}</p>
                 <button className="button secondary" onClick={onEdit}>
                   Изменить условия <ArrowUp size={14} />
                 </button>

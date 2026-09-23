@@ -38,6 +38,51 @@ async function main() {
       query: { ...rare, city: "Зарубежье" },
       status: "no_category",
     },
+    {
+      name: "dense-photographers",
+      query: {
+        city: "Алматы",
+        date: "2026-10-15",
+        category: "Фотограф",
+        event_format: "свадьба",
+        budget_kzt: 2000000,
+        preferences: "Репортаж, естественные кадры без постановки",
+      },
+      status: "matched",
+    },
+    {
+      name: "venues-two-results",
+      query: {
+        city: "Алматы",
+        date: "2026-11-14",
+        category: "Банкетный зал",
+        event_format: "корпоратив",
+        budget_kzt: 10000000,
+      },
+      status: "matched",
+    },
+    {
+      name: "venues-all-busy-december",
+      query: {
+        city: "Алматы",
+        date: "2026-12-19",
+        category: "Банкетный зал",
+        event_format: "корпоратив",
+        budget_kzt: 10000000,
+      },
+      status: "no_matches",
+    },
+    {
+      name: "rare-two-results",
+      query: {
+        city: "Алматы",
+        date: "2026-09-23",
+        category: "Декоратор",
+        event_format: "корпоратив",
+        budget_kzt: 10000000,
+      },
+      status: "matched",
+    },
   ] as const;
   const responses: SearchResponse[] = [];
   const rows = [];
@@ -46,10 +91,23 @@ async function main() {
     assert.equal(data.result.status, scenario.status, scenario.name);
     assert.ok(data.elapsedMs < 10000, `${scenario.name}: exceeded 10 seconds`);
     assert.ok(data.result.matches.length <= 3);
+    assert.ok(data.summary.length > 20);
+    if (data.result.status !== "matched") assert.equal(data.usage.length, 0);
+    if (live && data.result.status === "matched")
+      assert.equal(
+        data.explanationMode,
+        "ai",
+        `${scenario.name}: must exercise the real model`,
+      );
     const evidence = data.result.matches.map((match) => {
       assert.deepEqual(rejectionReasons(match.contractor, scenario.query), []);
       const quote = data.explanationEvidence[match.contractor.id].quote;
       assert.ok(match.contractor.description.includes(quote));
+      assert.equal(
+        data.explanationEvidence[match.contractor.id].quality,
+        "specific",
+        `${scenario.name}: the demo must have concrete individual facts`,
+      );
       assert.ok(
         !data.result.matches.some(
           (other) =>
@@ -62,6 +120,7 @@ async function main() {
         id: match.contractor.id,
         name: match.contractor.anon_name,
         individualFact: quote,
+        quality: data.explanationEvidence[match.contractor.id].quality,
         explanation: data.explanations[match.contractor.id],
       };
     });
@@ -70,6 +129,7 @@ async function main() {
       scenario: scenario.name,
       query: data.query,
       status: data.result.status,
+      summary: data.summary,
       ids: data.result.matches.map((m) => m.contractor.id),
       elapsedMs: data.elapsedMs,
       explanationMode: data.explanationMode,
@@ -105,6 +165,22 @@ async function main() {
     1,
     "Rare category must not invent a second or third match",
   );
+  assert.equal(
+    responses[7].result.matches.length,
+    2,
+    "Venue calendars must constrain the shortlist too",
+  );
+  assert.equal(
+    responses[9].result.matches.length,
+    2,
+    "A rare category must not be padded to three",
+  );
+  assert.equal(responses[8].availability.busyCandidates.length, 7);
+  assert.match(responses[8].summary, /Все анкеты.*заняты/);
+  assert.ok(
+    !responses[8].alternatives.some((a) => a.kind === "budget"),
+    "A larger budget cannot free a busy venue",
+  );
   if (live) {
     assert.equal(
       responses[0].explanationMode,
@@ -132,7 +208,7 @@ async function main() {
       JSON.stringify(report, null, 2) + "\n",
     );
   console.log(
-    `PASS: 6 scenarios; stable order; date exclusion; rare supply; three outcomes; individual source facts. Max ${report.maximumResponseMs} ms.`,
+    `PASS: ${cases.length} scenarios; stable order; date exclusion; rare supply; three outcomes; individual source facts; venue calendars and December exhaustion. Max ${report.maximumResponseMs} ms.`,
   );
 }
 main().catch((error) => {

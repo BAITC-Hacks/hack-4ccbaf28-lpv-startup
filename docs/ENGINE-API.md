@@ -25,9 +25,10 @@ Category means the service provider type: host, photographer, florist, banquet h
 Response fields:
 
 - `result.status`: `matched`, `no_category` or `no_matches`; at most three matches.
+- `summary`: explicit explanation of supply and exclusions, including rare categories and the all-busy case. Rejection counts may overlap and are never added as if they were distinct people.
 - `result.matches`: catalog profile, deterministic score and verifiable evidence. Only city/category candidates passing date, price, format, language and duration constraints can enter this array.
-- `explanations[id]`: brief explanation with hard facts and a distinctive exact source fragment.
-- `explanationEvidence[id]`: the exact fragment, its `description` source, and whether code or model selected it.
+- `explanations[id]`: brief explanation with hard facts and a distinctive exact source fragment, or an explicit limited-data explanation when the description does not support one.
+- `explanationEvidence[id]`: the exact fragment, its `description` source, whether code or model selected it, and `quality: specific | limited`. Limited source material is disclosed instead of rendered as generic praise; the retained fragment is provenance, not an invented advantage. Such profiles do not incur a quote-selection model call.
 - `availability`: requested date and IDs/names explicitly blocked by that date's calendar. Other hard failures can overlap.
 - `alternatives`: individually rechecked one-field changes that add eligible choices or lower the minimum available price. Applying an alternative requires an explicit user action.
 - `usage`, `trace`, `elapsedMs`, `explanationMode`, optional `notice`: measured routing/cost information and disclosed AI fallback.

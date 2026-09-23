@@ -96,7 +96,7 @@ test("quota failure preserves usable deterministic results and is disclosed", as
   assert.match(result.notice ?? "", /лимит API/);
 });
 
-test("disabled AI and empty supply incur no model calls", async (t) => {
+test("disabled AI, empty supply and insufficient source detail incur no model calls", async (t) => {
   const mock = t.mock.method(globalThis, "fetch", async () => {
     throw new Error("Must not call provider");
   });
@@ -110,6 +110,20 @@ test("disabled AI and empty supply incur no model calls", async (t) => {
     ).result.status,
     "no_category",
   );
+  const sparse = await runSearch(
+    {
+      city: "Алматы",
+      category: "Фотограф",
+      date: "2026-12-26",
+      event_format: "корпоратив",
+      budget_kzt: 10000000,
+    },
+    true,
+  );
+  assert.equal(sparse.result.matches.length, 1);
+  assert.equal(sparse.explanationEvidence["HK-20640"].quality, "limited");
+  assert.match(sparse.explanations["HK-20640"], /мало конкретных отличий/);
+  assert.equal(sparse.usage.length, 0);
   assert.equal(mock.mock.callCount(), 0);
 });
 

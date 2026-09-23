@@ -8,6 +8,7 @@ The deliverable is the recommendation engine and a demonstrable AI mode for an e
 npm ci
 npm test
 npm run verify:dod
+npm run verify:spec
 npm run typecheck
 npm run build
 ```
@@ -20,7 +21,7 @@ npm run verify:dod:live
 npm run verify:dod:live -- --report docs/DOD-RESULTS.json
 ```
 
-The live command fails if AI silently falls back on the first scenario, if any response exceeds 10 seconds, if card order changes for repeated input, if an unavailable contractor appears, if a quote is absent from its source, or if the expected rare/empty scenarios differ. It does not pretend that automatic checks replace human evaluation of explanation usefulness.
+The live command fails if AI silently falls back on any matched scenario, if any response exceeds 10 seconds, if card order changes for repeated input, if an unavailable contractor appears, if a quote is absent from its source, or if the expected rare/empty scenarios differ. It does not pretend that automatic checks replace human evaluation of explanation usefulness.
 
 ## What to demonstrate to judges
 
@@ -48,10 +49,12 @@ The engine first removes greeting/contact filler, identifies exact source fragme
 
 ## Measured run
 
-See `DOD-RESULTS.json` for exact parameters, identities, source facts, time, token usage and busy identities. On 23 September 2026 the real-API six-scenario run passed: 3.541 seconds maximum, 12 ms for the cached repeat, 1.349 seconds for the rare category. Estimated text-model cost for that evaluation: approximately $0.00290. Network and provider latency can vary; a 6.5-second model timeout preserves a deterministic local response if the provider is unavailable.
+See `DOD-RESULTS.json` for exact parameters, identities, source facts, time, token usage and busy identities. On 23 September 2026 the real-API ten-scenario run passed: 2.746 seconds maximum, 13 ms for the cached repeat, 1.748 seconds for the rare category. Estimated text-model cost for that evaluation: approximately $0.00436. Network and provider latency can vary; a 6.5-second model timeout preserves a deterministic local response if the provider is unavailable.
 
-28 tests also cover malformed arguments, source checking, all 100 calendar dates, all hard constraints across the organizer's profiles, normalized matching, stable tie-breaking, API failures, local favorites validation and three result types.
+37 tests also cover malformed arguments, source checking, all 100 calendar dates, all hard constraints across the organizer's profiles, normalized matching, stable tie-breaking, API failures, local favorites validation and three result types.
 
 ## Scope boundaries
+
+The complete requirement audit is in [SPEC-AUDIT.md](SPEC-AUDIT.md). An independent raw-field oracle checked 91,800 structured queries across all 100 dates, cities, categories and event formats at three budget levels; see [SPEC-CHECK-RESULTS.json](SPEC-CHECK-RESULTS.json). Seven descriptions lack a sufficiently specific distinction under the conservative heuristic. Those cards disclose limited evidence rather than inventing a unique advantage. Non-interchangeability is demonstrated on the live acceptance shortlists, not promised for every possible set of sparse profiles.
 
 No booking, provider messages, payments, real reviews or invented contacts. Date prices mean the minimum fixed starting price among available profiles, not invented discounts. Generated photos are marked illustrations. No fine-tuning or vector infrastructure is needed for 66 profiles. Voice is an input convenience; the engine remains independently usable through `/api/search`.

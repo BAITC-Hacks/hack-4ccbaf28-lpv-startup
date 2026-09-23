@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-09-23T11:45:27.317Z",
+  "passed": true,
+  "mode": "offline-exhaustive-structured-grid",
+  "catalogSize": 66,
+  "days": 100,
+  "cities": [
+    "Алматы",
+    "Астана",
+    "Зарубежье"
+  ],
+  "categories": 17,
+  "eventFormats": [
+    "день рождения",
+    "конференция",
+    "корпоратив",
+    "свадьба",
+    "той",
+    "юбилей"
+  ],
+  "budgets": [
+    100000,
+    1000000,
+    10000000
+  ],
+  "requests": 91800,
+  "checkedCards": 20262,
+  "outcomes": {
+    "matched": 12663,
+    "no_category": 43200,
+    "no_matches": 35937
+  },
+  "elapsedMs": 20311,
+  "limitedDescriptions": [
+    {
+      "id": "HK-74914",
+      "name": "Киллуа Золдик",
+      "category": "Видеограф"
+    },
+    {
+      "id": "HK-76335",
+      "name": "Йор Форджер",
+      "category": "Фотограф"
+    },
+    {
+      "id": "HK-20640",
+      "name": "Шикамару Нара",
+      "category": "Фотограф"
+    },
+    {
+      "id": "HK-25279",
+      "name": "Мегумин",
+      "category": "Лайв-бэнд"
+    },
+    {
+      "id": "HK-36965",
+      "name": "Эдвард Ван Хог",
+      "category": "Национальный ансамбль"
+    },
+    {
+      "id": "HK-19103",
+      "name": "Мэй Кусакабэ",
+      "category": "Национальный ансамбль"
+    },
+    {
+      "id": "HK-90008",
+      "name": "Рем",
+      "category": "Ведущий церемонии"
+    }
+  ],
+  "scope": "All catalog cities, categories, event formats and dates at three budget levels. Optional language/duration, invalid inputs, determinism and provider failures are covered by npm test. This is a constraint audit, not a human score of explanation quality. Limited-description labels are a conservative heuristic, not an assertion that a profile has no useful facts."
+}

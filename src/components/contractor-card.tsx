@@ -127,7 +127,7 @@ export default function ContractorCard({
           </span>
           <span>
             <Clock3 size={13} />
-            {c.max_hours ? `до ${c.max_hours} ч` : "без лимита часов"}
+            {c.max_hours ? `до ${c.max_hours} ч` : "без привязки к часам"}
           </span>
         </div>
         <p className="card-explanation">{explanation}</p>

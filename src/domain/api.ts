@@ -13,10 +13,16 @@ export interface ChatMessage {
 export interface SearchResponse {
   query: SearchQuery;
   result: SearchResult;
+  summary: string;
   explanations: Record<string, string>;
   explanationEvidence: Record<
     string,
-    { quote: string; source: "description"; selectedBy: "code" | "model" }
+    {
+      quote: string;
+      source: "description";
+      selectedBy: "code" | "model";
+      quality: "specific" | "limited";
+    }
   >;
   availability: {
     date: string;

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { individualQuotes, explanationFromQuote } from "../domain/explanations";
 import { alternatives, normalize, search } from "../domain/matching";
+import { resultSummary } from "../domain/result-summary";
 import type { SearchResponse } from "../domain/api";
 import type { SearchQuery } from "../domain/types";
 import { catalog } from "./catalog";
@@ -30,6 +31,7 @@ export async function runSearch(
   const data: SearchResponse = {
     query,
     result,
+    summary: resultSummary(result, query),
     explanations: {},
     explanationEvidence: {},
     availability: {
@@ -80,7 +82,7 @@ export async function runSearch(
       ]),
     );
     for (const match of result.matches) {
-      const quote = options.get(match.contractor.id)![0].quote;
+      const { quote, quality } = options.get(match.contractor.id)![0];
       data.explanations[match.contractor.id] = explanationFromQuote(
         match,
         query,
@@ -90,14 +92,18 @@ export async function runSearch(
         quote,
         source: "description",
         selectedBy: "code",
+        quality,
       };
     }
-    if (useAI && process.env.OPENAI_API_KEY) {
+    const aiMatches = result.matches.filter(
+      (match) => options.get(match.contractor.id)![0].quality === "specific",
+    );
+    if (useAI && process.env.OPENAI_API_KEY && aiMatches.length) {
       const complex =
         (query.preferences?.trim().length ?? 0) > 15 ||
         !!(query.language && query.hours);
       const model = complex ? models().reasoning : models().fast;
-      const candidates = result.matches.map((m) => ({
+      const candidates = aiMatches.map((m) => ({
         id: m.contractor.id,
         quotes: options.get(m.contractor.id)!.map((option) => option.quote),
         evidence: m.evidence,
@@ -160,10 +166,16 @@ export async function runSearch(
             quote: item.quote,
             source: "description",
             selectedBy: "model",
+            quality: options
+              .get(match.contractor.id)!
+              .find((option) => option.quote === item.quote)!.quality,
           };
           accepted++;
         }
         if (accepted > 0) data.explanationMode = "ai";
+        if (accepted < aiMatches.length)
+          data.notice =
+            "Часть цитат AI не прошла проверку источника; для этих анкет сохранены локальные объяснения по подтверждённым данным.";
         data.trace.push({
           label: "Индивидуальные объяснения",
           detail: `${model}: ${complex ? "пожелания к стилю и несколько ограничений" : "короткий запрос"}. ${accepted}/${result.matches.length} цитат проверено по источнику.`,
@@ -179,11 +191,19 @@ export async function runSearch(
           "Индивидуальные факты отобраны по конкретности и отличиям от других анкет. Вызовов LLM нет.",
         kind: "code",
       });
-    for (const match of result.matches)
+    for (const match of result.matches) {
+      const evidence = data.explanationEvidence[match.contractor.id];
       match.evidence.push({
-        criterion: "individual_fact",
-        fact: data.explanationEvidence[match.contractor.id].quote,
+        criterion:
+          evidence.quality === "specific"
+            ? "individual_fact"
+            : "limited_description",
+        fact:
+          evidence.quality === "specific"
+            ? evidence.quote
+            : "Описание не содержит достаточно конкретных отличий; особенности услуги не следует додумывать. Сравнивайте подтверждённые поля анкеты.",
       });
+    }
   } else if (data.alternatives.length)
     data.trace.push({
       label: "Проверка альтернатив",
