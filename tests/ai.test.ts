@@ -1,11 +1,11 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { runSearch } from "../src/server/search-service";
+import { runSearch as searchService } from "../src/server/search-service";
 import { initialQuery } from "../src/server/catalog";
 import { estimatedCost } from "../src/server/openai";
 import { checkRequest } from "../src/server/http";
 import { search } from "../src/domain/matching";
-import { catalog } from "../src/server/catalog";
+import { officialCatalog as catalog } from "../src/server/catalog";
 import { individualQuotes } from "../src/domain/explanations";
 
 const previousKey = process.env.OPENAI_API_KEY;
@@ -194,3 +194,7 @@ test("a real but generic quote cannot replace individual evidence selected by th
     /актёр театра/,
   );
 });
+
+function runSearch(query: Parameters<typeof searchService>[0], useAI: boolean) {
+  return searchService(query, useAI, catalog);
+}

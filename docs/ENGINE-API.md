@@ -56,3 +56,7 @@ The chat attaches each search response to its assistant message. `conversationCo
 - Model names are configurable server-side; keys never enter the client or the repository.
 
 The supplied host binds to localhost. Production authentication, per-user quotas and the aggregator's storage/consent policy belong to deployment integration; this prototype does not claim a public multi-user deployment.
+
+## Dataset provenance
+
+The default catalog contains 186 profiles: 66 unchanged organizer records and 120 synthetic LPV records from `data/contractors.synthetic.json`. Team IDs use `LPV-SYN-*` and `synthetic: true`; descriptions, prices and availability are demo fixtures. `getMeta()` returns `officialCount` and `teamSyntheticCount`. The server `runSearch(query, useAI, catalog?)` accepts an explicit catalog for adapter integration and organizer-only regression tests; HTTP clients do not override the catalog. Filtering and ranking do not privilege synthetic or organizer profiles.

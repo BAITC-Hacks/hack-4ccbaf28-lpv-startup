@@ -7,8 +7,12 @@ import {
   explanationFromQuote,
   shortlistComparison,
 } from "../src/domain/explanations";
-import { catalog, initialQuery, getMeta } from "../src/server/catalog";
-import { runSearch } from "../src/server/search-service";
+import {
+  officialCatalog as catalog,
+  initialQuery,
+  getMeta,
+} from "../src/server/catalog";
+import { runSearch as searchService } from "../src/server/search-service";
 import { rank } from "../src/domain/matching";
 
 test("dense-category explanations identify the actual profile even after names are removed", async () => {
@@ -266,3 +270,7 @@ test("comparisons do not invent sole eligibility, language uniqueness or unlimit
   assert.match(shortlistComparison(a, [a], 1), /Единственная анкета/);
   assert.equal(shortlistComparison(a, [b], 1), "");
 });
+
+function runSearch(query: Parameters<typeof searchService>[0], useAI: boolean) {
+  return searchService(query, useAI, catalog);
+}

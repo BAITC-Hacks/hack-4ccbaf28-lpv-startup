@@ -24,12 +24,12 @@ const favoriteSchema = z.object({
 });
 /** Validate browser storage before rendering; one favorite per catalog identity. */
 export function readFavorites(raw: string | null): Favorite[] {
-  if (!raw || raw.length > 500_000) return [];
+  if (!raw || raw.length > 2_000_000) return [];
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
     const result: Favorite[] = [];
-    for (const value of parsed.slice(0, 66)) {
+    for (const value of parsed.slice(0, 500)) {
       const item = favoriteSchema.safeParse(value);
       if (
         item.success &&

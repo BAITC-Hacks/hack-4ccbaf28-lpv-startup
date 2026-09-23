@@ -1913,6 +1913,13 @@ dialog h3 {
   max-width: 355px;
   margin: 0 auto;
 }
+.conversation-workspace .chat-welcome > p.welcome-guide {
+  font-size: clamp(15px, 1.4vw, 18px);
+  font-weight: 500;
+  line-height: 1.65;
+  max-width: 540px;
+  color: #536247;
+}
 .chat-examples {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

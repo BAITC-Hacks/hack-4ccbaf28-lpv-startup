@@ -1,4 +1,4 @@
-/** Official Firebird hackathon catalog; prices are starting prices, not quotes. */
+/** Official and explicitly synthetic Firebird profiles; prices are starting prices. */
 export interface Contractor {
   id: string;
   anon_name: string;

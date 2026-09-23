@@ -7,8 +7,8 @@ import {
 import { alternatives, normalize, search } from "../domain/matching";
 import { resultSummary } from "../domain/result-summary";
 import type { SearchResponse } from "../domain/api";
-import type { SearchQuery } from "../domain/types";
-import { catalog } from "./catalog";
+import type { Contractor, SearchQuery } from "../domain/types";
+import { catalog as defaultCatalog } from "./catalog";
 import { friendlyProviderError, models, outputText, respond } from "./openai";
 
 const selectionSchema = z
@@ -29,6 +29,7 @@ const selectionSchema = z
 export async function runSearch(
   query: SearchQuery,
   useAI: boolean,
+  catalog: readonly Contractor[] = defaultCatalog,
 ): Promise<SearchResponse> {
   const started = Date.now();
   const result = search(catalog, query);
@@ -60,7 +61,7 @@ export async function runSearch(
     trace: [
       {
         label: "Поиск по каталогу",
-        detail: `66 анкет → ${result.status === "no_category" ? 0 : result.candidatesInCity} в городе и категории`,
+        detail: `${catalog.length} анкет → ${result.status === "no_category" ? 0 : result.candidatesInCity} в городе и категории`,
         kind: "code",
       },
       {

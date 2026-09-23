@@ -1,8 +1,11 @@
 import data from "../../data/contractors.json";
+import added from "../../data/contractors.synthetic.json";
 import type { Contractor, SearchQuery } from "../domain/types";
 import type { CatalogMeta } from "../domain/api";
 
-export const catalog: Contractor[] = data;
+export const officialCatalog: Contractor[] = data;
+export const teamCatalog: Contractor[] = added;
+export const catalog: Contractor[] = [...officialCatalog, ...teamCatalog];
 const unique = (values: string[]) =>
   [...new Set(values)].sort((a, b) => a.localeCompare(b, "ru"));
 export const initialQuery: SearchQuery = {
@@ -27,6 +30,8 @@ export function getMeta(): CatalogMeta {
   };
   return {
     count: catalog.length,
+    officialCount: officialCatalog.length,
+    teamSyntheticCount: teamCatalog.length,
     synthetic: catalog.filter((c) => c.synthetic).length,
     cities: unique(catalog.map((c) => c.city)),
     categories: unique(catalog.flatMap((c) => c.categories)),

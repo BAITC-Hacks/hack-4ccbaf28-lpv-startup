@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "check": "npm run format:check && npm test && npm run verify:dod && npm run verify:spec && npm run typecheck && npm run build",
+    "check": "npm run format:check && npm run data:check && npm test && npm run verify:dod && npm run verify:spec && npm run typecheck && npm run build",
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
@@ -14,7 +14,9 @@
     "format:check": "prettier --check src scripts tests next.config.ts tsconfig.json package.json",
     "verify:dod": "node --import tsx scripts/verify-dod.ts",
     "verify:spec": "node --import tsx scripts/verify-spec.ts",
-    "verify:dod:live": "node --env-file=.env.local --import tsx scripts/verify-dod.ts --live"
+    "verify:dod:live": "node --env-file=.env.local --import tsx scripts/verify-dod.ts --live",
+    "data:generate": "node --import tsx scripts/generate-synthetic.ts",
+    "data:check": "node --import tsx scripts/generate-synthetic.ts --check"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "5.3.0",

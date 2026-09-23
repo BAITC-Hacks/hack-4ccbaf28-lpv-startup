@@ -30,7 +30,7 @@ async function main() {
     { name: "rare-category", query: rare, status: "matched" },
     {
       name: "existing-supply-no-matches",
-      query: { ...initialQuery, budget_kzt: 100000 },
+      query: { ...initialQuery, budget_kzt: 10000 },
       status: "no_matches",
     },
     {
@@ -57,7 +57,7 @@ async function main() {
         date: "2026-11-14",
         category: "Банкетный зал",
         event_format: "корпоратив",
-        budget_kzt: 10000000,
+        budget_kzt: 500000,
       },
       status: "matched",
     },
@@ -83,6 +83,17 @@ async function main() {
       },
       status: "matched",
     },
+    ...["Алматы", "Астана"].map((city) => ({
+      name: city === "Алматы" ? "budget-hosts-almaty" : "budget-hosts-astana",
+      query: {
+        city,
+        date: "2026-10-15",
+        category: "Ведущий",
+        event_format: "корпоратив",
+        budget_kzt: 100000,
+      },
+      status: "matched",
+    })),
   ] as const;
   const responses: SearchResponse[] = [];
   const rows = [];
@@ -175,7 +186,7 @@ async function main() {
     2,
     "A rare category must not be padded to three",
   );
-  assert.equal(responses[8].availability.busyCandidates.length, 7);
+  assert.equal(responses[8].availability.busyCandidates.length, 17);
   assert.match(responses[8].summary, /Все анкеты.*заняты/);
   assert.ok(
     !responses[8].alternatives.some((a) => a.kind === "budget"),
@@ -193,6 +204,7 @@ async function main() {
     checkedAt: new Date().toISOString(),
     mode: live ? "live-api" : "offline",
     catalogSize: catalog.length,
+    catalogBreakdown: { organizer: 66, teamSynthetic: 120 },
     passed: true,
     repeatOrder: true,
     busyIdentityExplained: excluded.map((m) => m.contractor.id),

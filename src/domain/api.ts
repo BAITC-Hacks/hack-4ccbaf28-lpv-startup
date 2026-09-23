@@ -43,6 +43,8 @@ export interface SearchResponse {
 }
 export interface CatalogMeta {
   count: number;
+  officialCount: number;
+  teamSyntheticCount: number;
   synthetic: number;
   cities: string[];
   categories: string[];

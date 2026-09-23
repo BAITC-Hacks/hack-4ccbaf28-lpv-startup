@@ -516,9 +516,9 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
                   <br />
                   <em>вашего события?</em>
                 </h1>
-                <p>
-                  Расскажите идею — я уточню детали и выберу до трёх подходящих
-                  вариантов.
+                <p className="welcome-guide">
+                  Назовите город, дату, тип события, кого ищете и бюджет. Язык и
+                  длительность — по желанию.
                 </p>
               </div>
             )}
@@ -710,10 +710,12 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
             )}
           </div>
           <div className="chat-bottom">
-            <p className="input-guide">
-              Назовите город, дату, тип события, кого ищете и бюджет. Язык и
-              длительность — по желанию.
-            </p>
+            {started && (
+              <p className="input-guide">
+                Назовите город, дату, тип события, кого ищете и бюджет. Язык и
+                длительность — по желанию.
+              </p>
+            )}
             <div className="chat-error" role="status">
               {error}
             </div>
@@ -810,7 +812,8 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
       </div>
       <div className="ai-footer">
         <span>
-          Демо AI-режима · LPV Startup · {meta.count} анкет организаторов
+          Демо AI-режима · {meta.count} анкет: {meta.officialCount} от
+          организаторов + {meta.teamSyntheticCount} синтетических LPV
         </span>
         <button
           className="text-button"

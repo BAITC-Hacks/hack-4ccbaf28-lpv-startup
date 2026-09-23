@@ -61,6 +61,7 @@ export default function ContractorCard({
   onToggleFavorite?: () => void;
 }) {
   const c = match.contractor;
+  const teamSynthetic = c.synthetic && c.id.startsWith("LPV-SYN-");
   const photo = illustration(c);
   const portrait = /\/host-|\/photographer/.test(photo.src);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -111,7 +112,9 @@ export default function ContractorCard({
           <MapPin size={13} />
           {c.city}
           {c.synthetic && (
-            <span className="mini-badge">синтетическая анкета</span>
+            <span className="mini-badge">
+              {teamSynthetic ? "синтетика LPV" : "синтетика организаторов"}
+            </span>
           )}
         </p>
         <div className="card-price">
@@ -162,8 +165,10 @@ export default function ContractorCard({
           </button>
         </div>
         <p className="subtle">
-          Имя анонимизировано. Изображение — иллюстрация интерфейса, а не
-          внешность этого подрядчика.
+          {teamSynthetic
+            ? "Имя и анкета вымышлены для демо."
+            : "Имя анонимизировано."}{" "}
+          Изображение — иллюстрация интерфейса, а не внешность этого подрядчика.
         </p>
         <h3>Почему подходит</h3>
         <ul className="evidence-list">
@@ -185,9 +190,11 @@ export default function ContractorCard({
           </p>
           <p>
             <b>Источник:</b>{" "}
-            {c.synthetic
-              ? "синтетическая анкета организаторов"
-              : "анонимизированная анкета организаторов"}
+            {teamSynthetic
+              ? "вымышленная анкета команды LPV; цены, услуги и календарь созданы для демо"
+              : c.synthetic
+                ? "синтетическая анкета организаторов"
+                : "анонимизированная анкета организаторов"}
           </p>
           {(c.city_imputed || c.price_imputed) && (
             <p>

@@ -1,7 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runSearch } from "../src/server/search-service";
-import { initialQuery } from "../src/server/catalog";
+import { runSearch as searchService } from "../src/server/search-service";
+import {
+  initialQuery,
+  officialCatalog as catalog,
+} from "../src/server/catalog";
 
 test("rare supply explains its actual exclusion without hiding it behind a UI disclosure", async () => {
   const data = await runSearch(
@@ -53,3 +56,7 @@ test("an absent city-category pair stays explicit and incurs no invented alterna
   assert.match(data.summary, /нет анкет категории «Флорист»/);
   assert.equal(data.alternatives.length, 0);
 });
+
+function runSearch(query: Parameters<typeof searchService>[0], useAI: boolean) {
+  return searchService(query, useAI, catalog);
+}
