@@ -6,12 +6,10 @@ The deliverable is the recommendation engine and a demonstrable AI mode for an e
 
 ```sh
 npm ci
-npm test
-npm run verify:dod
-npm run verify:spec
-npm run typecheck
-npm run build
+npm run check
 ```
+
+`check` runs formatting checks, tests, offline DoD scenarios, the structured query grid, type checking and the production build.
 
 The offline evaluation requires no key. To verify real LLM calls, add your own key to ignored `.env.local` and run:
 
@@ -51,7 +49,7 @@ The engine first removes greeting/contact filler, identifies exact source fragme
 
 See `DOD-RESULTS.json` for exact parameters, identities, source facts, time, token usage and busy identities. On 23 September 2026 the real-API ten-scenario run passed: 2.746 seconds maximum, 13 ms for the cached repeat, 1.748 seconds for the rare category. Estimated text-model cost for that evaluation: approximately $0.00436. Network and provider latency can vary; a 6.5-second model timeout preserves a deterministic local response if the provider is unavailable.
 
-37 tests also cover malformed arguments, source checking, all 100 calendar dates, all hard constraints across the organizer's profiles, normalized matching, stable tie-breaking, API failures, local favorites validation and three result types.
+39 tests also cover malformed arguments, source checking, all 100 calendar dates, all hard constraints across the organizer's profiles, normalized matching, stable tie-breaking, API failures, local favorites validation and three result types. Shortlist comparisons for sparse profiles are checked separately: price differences, language uniqueness, tied fields and sole eligibility must follow the catalog fields.
 
 ## Scope boundaries
 
