@@ -32,7 +32,7 @@ Start-screen shortcuts use the explicitly displayed current date and search imme
 | Same request, same order | Click **Подобрать варианты** again without editing | Same IDs and order; repeated model request is cached |
 | Two dates, changed availability | **Параметры** → date 17 October → confirm | Мицури Канроджи is excluded because that date is in their busy calendar; the UI explicitly explains the change |
 | Rare category | **Параметры**: Алматы, Флорист, корпоратив, 15 October, 400,000 ₸, no language/hours constraints; confirm | One suitable florist; no invented second/third profile, with an explicit explanation that no other profile passes all constraints |
-| Candidates exist but fail | **Новый подбор** → **Ведущий до 100 тыс. ₸**; set 15 October in parameters and confirm | No matches, reasons and individually verified alternative changes |
+| Candidates exist but fail | Reuse all parameters from the dense-category scenario, reduce the budget to 100,000 ₸ and confirm | No matches, reasons and individually verified alternative changes |
 | Category absent in city | Parameters: Зарубежье, Флорист, корпоратив, 15 October, 400,000 ₸ | Explicitly says the city has no such category; not an error or empty screen |
 | Understandable pipeline | **Модели и расход API**, **Почему подходит и анкета** | Routing, measured tokens/time, hard-filter evidence and the original description are visible |
 
