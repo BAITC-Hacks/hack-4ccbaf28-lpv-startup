@@ -6,7 +6,7 @@
 - `POST /api/calendar`: partial brief → availability and minimum starting price for each day from 23 September through 31 December 2026. Requires city, category and event format. Language and duration remain hard filters; budget is shown separately. Prices are fixed per contractor: another day changes who is available, not their tariff.
 - `POST /api/transcribe`: multipart `file`, max 8 MB → transcript and usage. Uses `gpt-4o-mini-transcribe`, configurable with `OPENAI_MODEL_TRANSCRIBE`. Audio is held in request memory only, never persisted or cached. Upload limits are enforced even without Content-Length. Text/audio token prices are different, so audio cost is left unknown until an applicable rate is verified.
 - Search now supplies useful alternatives after successful results too: a higher budget must add eligible profiles; a nearby date must add choice or lower the minimum starting price. Every alternative reruns all constraints and changes one field only.
-- The existing UI remains usable while the new conversation/voice interface is being integrated. The older `/api/agent` endpoint still supports the first MVP interface at this milestone.
+- The UI is an AI mode intended for an existing aggregator: a familiar chat and a separate recommendation panel, mobile tabs, compact parameters opened on demand, and local browser favorites. No integration with a live aggregator is claimed.
 
 ## Validation
 
@@ -14,10 +14,16 @@
 
 ## UI acceptance criteria
 
-Form left and conversation right on desktop; stacked on small screens. Voice is available from a fixed bottom button: first press records, second stops and sends. Recording/transcription/assistant updates must not focus fields or scroll the document. A notification allows an explicit jump to the updated brief. Results update only after confirmation. Manual edits made during processing must not be overwritten by a stale assistant response.
+Conversation with a results panel on desktop; Chat / Selection / Favorites tabs on small screens. Parameters are edited in a dialog. Voice is available from a fixed bottom button: first press records, second stops and sends. Recording/transcription/assistant updates must not focus fields or scroll the document. A notification allows an explicit jump to the updated brief. Results update only after confirmation. Manual edits made during processing must not be overwritten by a stale assistant response.
 
 ## References
 
 - [OpenAI file transcription](https://developers.openai.com/api/docs/guides/speech-to-text)
 - [GPT-4o mini transcribe](https://developers.openai.com/api/docs/models/gpt-4o-mini-transcribe)
 - [MediaRecorder browser support checks](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_static)
+
+## Verified UI milestone
+
+Production build, 22 tests, and TypeScript pass. Desktop and 390×844 mobile interfaces were inspected in a real browser. Live AI search returned in 2.82 seconds; a selected favorite survived reload. A 7.47-second synthetic Russian recording was transcribed by the real audio API in 2.93 seconds; it retained event date, budget and style. The user’s physical microphone was not recorded during validation. The recorder includes permission/unsupported-browser errors, a 60-second limit, cancellation, stream cleanup, and session IDs preventing stale permission responses from starting cancelled recordings.
+
+Next priority is the specification’s Definition of Done, especially non-interchangeable source-grounded explanations. UI expansion is paused in favor of engine evaluation.
