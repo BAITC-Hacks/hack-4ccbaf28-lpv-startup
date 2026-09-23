@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { individualQuotes, explanationFromQuote } from "../domain/explanations";
+import {
+  individualQuotes,
+  explanationFromQuote,
+  shortlistComparison,
+} from "../domain/explanations";
 import { alternatives, normalize, search } from "../domain/matching";
 import { resultSummary } from "../domain/result-summary";
 import type { SearchResponse } from "../domain/api";
@@ -83,16 +87,32 @@ export async function runSearch(
     );
     for (const match of result.matches) {
       const { quote, quality } = options.get(match.contractor.id)![0];
+      const comparison =
+        quality === "limited"
+          ? shortlistComparison(match, result.matches, result.totalEligible)
+          : "";
       data.explanations[match.contractor.id] = explanationFromQuote(
         match,
         query,
         quote,
+        comparison,
       );
       data.explanationEvidence[match.contractor.id] = {
         quote,
         source: "description",
         selectedBy: "code",
         quality,
+        ...(comparison
+          ? {
+              comparison: {
+                text: comparison,
+                source: "catalog_fields" as const,
+                peerIds: result.matches
+                  .filter((m) => m.contractor.id !== match.contractor.id)
+                  .map((m) => m.contractor.id),
+              },
+            }
+          : {}),
       };
     }
     const aiMatches = result.matches.filter(
@@ -193,6 +213,11 @@ export async function runSearch(
       });
     for (const match of result.matches) {
       const evidence = data.explanationEvidence[match.contractor.id];
+      if (evidence.comparison)
+        match.evidence.push({
+          criterion: "shortlist_comparison",
+          fact: evidence.comparison.text,
+        });
       match.evidence.push({
         criterion:
           evidence.quality === "specific"

@@ -176,10 +176,47 @@ export function individualQuotes(
     .slice(0, 4);
 }
 
+/** Only compare returned profiles; never imply the cheapest shortlist item is best. */
+export function shortlistComparison(
+  match: RankedMatch,
+  matches: readonly RankedMatch[],
+  totalEligible: number,
+): string {
+  const c = match.contractor;
+  if (!matches.some((m) => m.contractor.id === c.id)) return "";
+  const others = matches
+    .filter((m) => m.contractor.id !== c.id)
+    .map((m) => m.contractor);
+  if (!others.length)
+    return totalEligible === 1
+      ? "Единственная анкета этой категории в городе, которая проходит все заданные условия"
+      : "";
+  const nextPrice = Math.min(...others.map((p) => p.price_from_kzt));
+  if (c.price_from_kzt < nextPrice)
+    return `Начальная цена на ${money(nextPrice - c.price_from_kzt)} ниже ближайшего по цене из остальных показанных вариантов`;
+  const uniqueLanguage = c.languages.find(
+    (language) =>
+      !others.some((p) =>
+        p.languages.some((value) => normalize(value) === normalize(language)),
+      ),
+  );
+  if (uniqueLanguage)
+    return `Из показанных анкет только здесь указан язык «${uniqueLanguage}»`;
+  if (
+    c.max_hours !== null &&
+    others.every((p) => p.max_hours !== null && p.max_hours < c.max_hours!)
+  )
+    return `Самый большой указанный лимит среди показанных анкет — ${c.max_hours} ч`;
+  if (c.price_from_kzt > nextPrice)
+    return `Начальная цена на ${money(c.price_from_kzt - nextPrice)} выше минимальной среди показанных анкет; более высокая цена сама по себе не подтверждает лучшее качество`;
+  return "";
+}
+
 export function explanationFromQuote(
   match: RankedMatch,
   query: SearchQuery,
   quote: string,
+  comparison = "",
 ): string {
   const c = match.contractor;
   const date = query.date.split("-").reverse().join(".");
@@ -194,6 +231,8 @@ export function explanationFromQuote(
   if (conflict)
     return `${facts} Ограничение по пожеланию: ${conflict.fact.toLocaleLowerCase("ru-RU")}; строгие условия соблюдены, но стиль может не подойти.`;
   if (detailStrength(quote) < 3)
-    return `${facts} В описании мало конкретных отличий: сравнивайте по указанным цене, языкам и длительности; особенности стиля и состава услуги не подтверждены.`;
+    return comparison
+      ? `${facts} ${comparison}; в описании мало конкретных отличий, особенности стиля и состава услуги не подтверждены.`
+      : `${facts} В описании мало конкретных отличий: сравнивайте по указанным цене, языкам и длительности; особенности стиля и состава услуги не подтверждены.`;
   return `${facts} По описанию: «${quote}»`;
 }

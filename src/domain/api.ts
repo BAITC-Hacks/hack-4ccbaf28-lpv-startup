@@ -22,6 +22,11 @@ export interface SearchResponse {
       source: "description";
       selectedBy: "code" | "model";
       quality: "specific" | "limited";
+      comparison?: {
+        text: string;
+        source: "catalog_fields";
+        peerIds: string[];
+      };
     }
   >;
   availability: {

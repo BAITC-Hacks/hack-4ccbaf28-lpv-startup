@@ -5,6 +5,7 @@ import {
   sourceFragments,
   individualQuotes,
   explanationFromQuote,
+  shortlistComparison,
 } from "../src/domain/explanations";
 import { catalog, initialQuery, getMeta } from "../src/server/catalog";
 import { runSearch } from "../src/server/search-service";
@@ -210,4 +211,58 @@ test("duration is explained as a limit and null is not advertised as unlimited a
   );
   assert.match(explanation, /часы присутствия к этой услуге не применяются/);
   assert.ok(!explanation.includes("без лимита"));
+});
+
+test("sparse profiles get verifiable price comparisons limited to the visible shortlist", () => {
+  const profile = catalog.find((c) => c.id === "HK-76335")!;
+  const matches = [200000, 350000, 500000].map((price, index) =>
+    rank(
+      { ...profile, id: `sample-${index}`, price_from_kzt: price },
+      initialQuery,
+    ),
+  );
+  const cheapest = shortlistComparison(matches[0], matches, 12);
+  assert.match(cheapest, /150\s000 ₸ ниже/);
+  assert.match(cheapest, /показанных/);
+  const middle = shortlistComparison(matches[1], matches, 12);
+  assert.match(middle, /150\s000 ₸ выше/);
+  assert.match(middle, /не подтверждает лучшее качество/);
+  assert.notEqual(cheapest, middle);
+  const tie = matches.map((m) => ({
+    ...m,
+    contractor: { ...m.contractor, price_from_kzt: 200000 },
+  }));
+  assert.equal(shortlistComparison(tie[0], tie, 3), "");
+});
+
+test("comparisons do not invent sole eligibility, language uniqueness or unlimited hours", () => {
+  const profile = catalog[0];
+  const a = rank(
+    {
+      ...profile,
+      id: "a",
+      price_from_kzt: 500000,
+      max_hours: 8,
+      languages: ["русский", "английский"],
+    },
+    initialQuery,
+  );
+  const b = rank(
+    {
+      ...profile,
+      id: "b",
+      price_from_kzt: 500000,
+      max_hours: null,
+      languages: ["русский"],
+    },
+    initialQuery,
+  );
+  assert.match(
+    shortlistComparison(a, [a, b], 2),
+    /только здесь указан язык «английский»/,
+  );
+  assert.equal(shortlistComparison(b, [a, b], 2), "");
+  assert.equal(shortlistComparison(a, [a], 5), "");
+  assert.match(shortlistComparison(a, [a], 1), /Единственная анкета/);
+  assert.equal(shortlistComparison(a, [b], 1), "");
 });
