@@ -1,6 +1,6 @@
 {
-  "verifiedAt": "2026-09-23T12:13:33.947Z",
-  "implementationCommit": "173dad8fbba2bf50b38abdd0be93b51741a27846",
+  "verifiedAt": "2026-09-23T12:38:30.706Z",
+  "implementationCommit": "94119ce5984db01a0d5ef98148901070d274e42a",
   "platform": "darwin",
   "architecture": "arm64",
   "node": "v26.7.0",
@@ -17,34 +17,40 @@
     "command": "npm run check",
     "exitCode": 0,
     "format": "PASS",
+    "syntheticRegeneration": "PASS",
     "tests": {
-      "passed": 39,
+      "passed": 45,
       "failed": 0
     },
     "offlineDoD": {
-      "passed": 10,
-      "maxElapsedMs": 17
+      "passed": 12,
+      "maxElapsedMs": 26
     },
     "specGrid": {
       "queries": 91800,
-      "checkedCards": 20262,
-      "elapsedMs": 20995
+      "checkedCards": 42247,
+      "elapsedMs": 55836
     },
     "typecheck": "PASS",
     "productionBuild": "PASS"
   },
   "http": {
     "homepage": 200,
+    "startHint": "Updated larger guidance present; previous introduction removed",
     "search": {
       "status": 200,
       "result": "matched",
-      "cards": 1,
+      "cards": 2,
+      "prices": [
+        55000,
+        85000
+      ],
       "aiAvailable": false,
       "explanationMode": "local",
       "modelCalls": 0,
-      "comparisonSource": "catalog_fields",
-      "explanation": "На 26.12.2026 дата свободна по календарю; от 150 000 ₸ при бюджете 10 000 000 ₸, формат «корпоратив». Единственная анкета этой категории в городе, которая проходит все заданные условия; в описании мало конкретных отличий, особенности стиля и состава услуги не подтверждены."
+      "allNewProfilesMarkedSynthetic": true
     },
+    "astanaBudgetHostCards": 3,
     "briefWithoutKey": 503,
     "invalidDate": 400
   },
@@ -52,5 +58,22 @@
     "Single macOS machine using a separate clean checkout and dependency installation",
     "Real API results are recorded separately in DOD-RESULTS.json",
     "Physical user microphone was not recorded"
-  ]
+  ],
+  "catalog": {
+    "total": 186,
+    "organizer": 66,
+    "teamSynthetic": 120
+  },
+  "browser": {
+    "mainServer": "With configured API key",
+    "budgetHostCards": 2,
+    "teamProvenanceVisible": true,
+    "largerStartHintCheckedAt": [
+      "1280x720",
+      "390x844"
+    ],
+    "viewportRestored": true
+  },
+  "verifiedLocalCommitBeforeDocumentationRebase": "cb49f5be551278554642032cc9338eaf999b5f8c",
+  "rebaseVerification": "Executable sources, tests, data and dependency files are byte-identical to the tested local commit; teammate documentation changes preserved."
 }
