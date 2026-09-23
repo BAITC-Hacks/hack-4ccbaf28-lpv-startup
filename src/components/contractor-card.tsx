@@ -62,18 +62,25 @@ export default function ContractorCard({
 }) {
   const c = match.contractor;
   const photo = illustration(c);
+  const portrait = /\/host-|\/photographer/.test(photo.src);
   const dialog = useRef<HTMLDialogElement>(null);
   return (
-    <article className="contractor-card">
+    <article className={`contractor-card ${portrait ? "portrait-card" : ""}`}>
       <div className="card-image">
-        <Image
-          src={photo.src}
-          alt={photo.alt}
-          fill
-          sizes="(max-width: 700px) 100vw, (max-width: 1000px) 50vw, 33vw"
-          style={{ objectFit: "cover" }}
-          loading="lazy"
-        />
+        <div className="photo-frame">
+          <Image
+            src={photo.src}
+            alt={photo.alt}
+            fill
+            sizes={
+              portrait
+                ? "240px"
+                : "(max-width: 700px) 100vw, (max-width: 1000px) 50vw, 33vw"
+            }
+            style={{ objectFit: "cover" }}
+            loading="lazy"
+          />
+        </div>
         <span className="photo-label">AI-иллюстрация</span>
         {onToggleFavorite ? (
           <button

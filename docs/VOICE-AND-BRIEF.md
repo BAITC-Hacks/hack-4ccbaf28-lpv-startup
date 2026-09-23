@@ -14,7 +14,7 @@
 
 ## UI acceptance criteria
 
-Conversation with a results panel on desktop; Chat / Selection / Favorites tabs on small screens. Parameters are edited in a dialog. Voice is available from a fixed bottom button: first press records, second stops and sends. Recording/transcription/assistant updates must not focus fields or scroll the document. A notification allows an explicit jump to the updated brief. Results update only after confirmation. Manual edits made during processing must not be overwritten by a stale assistant response.
+Conversation with a results panel on desktop; Chat / Selection / Favorites tabs on small screens. Parameters are edited in a dialog. Voice is available inside the chat composer beside Send (the floating button was removed): first press records, second stops and sends. Recording/transcription/assistant updates must not focus fields or scroll the document. A notification allows an explicit jump to the updated brief. Results update only after confirmation. Manual edits made during processing must not be overwritten by a stale assistant response.
 
 ## References
 
@@ -26,4 +26,4 @@ Conversation with a results panel on desktop; Chat / Selection / Favorites tabs 
 
 Production build, 22 tests, and TypeScript pass. Desktop and 390×844 mobile interfaces were inspected in a real browser. Live AI search returned in 2.82 seconds; a selected favorite survived reload. A 7.47-second synthetic Russian recording was transcribed by the real audio API in 2.93 seconds; it retained event date, budget and style. The user’s physical microphone was not recorded during validation. The recorder includes permission/unsupported-browser errors, a 60-second limit, cancellation, stream cleanup, and session IDs preventing stale permission responses from starting cancelled recordings.
 
-Next priority is the specification’s Definition of Done, especially non-interchangeable source-grounded explanations. UI expansion is paused in favor of engine evaluation.
+The subsequent engine milestone passed all six live Definition of Done scenarios; see [DEFINITION-OF-DONE.md](DEFINITION-OF-DONE.md). Current checks: 27 tests. Explicit start-screen quick requests now display their date/city/budget and search on click; conversational drafts still require confirmation. Portrait illustrations are circular face crops; venue/work images remain rectangular.

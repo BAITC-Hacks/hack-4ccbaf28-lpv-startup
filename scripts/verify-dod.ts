@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
-import { catalog, getMeta, initialQuery } from "../src/server/catalog";
+import { catalog, initialQuery } from "../src/server/catalog";
 import { runSearch } from "../src/server/search-service";
 import { rejectionReasons } from "../src/domain/matching";
 import type { SearchResponse } from "../src/domain/api";
@@ -11,7 +11,14 @@ async function main() {
     throw new Error(
       "Live evaluation requires OPENAI_API_KEY; load .env.local explicitly.",
     );
-  const rare = getMeta().demos[1].query;
+  const rare = {
+    city: "Алматы",
+    date: "2026-10-15",
+    category: "Флорист",
+    event_format: "корпоратив",
+    budget_kzt: 400000,
+    preferences: "Авторское цветочное оформление",
+  };
   const cases = [
     { name: "dense-autumn", query: initialQuery, status: "matched" },
     { name: "same-request-repeat", query: initialQuery, status: "matched" },

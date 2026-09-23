@@ -5,7 +5,6 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
-  AudioLines,
   CalendarDays,
   Check,
   CircleHelp,
@@ -361,14 +360,9 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
     setToast(null);
   }
   function useDemo(index: number) {
-    autoScroll.current = true;
     setMobilePane("chat");
-    const demo = meta.demos[index];
-    applyBrief(demo.query);
-    append({
-      role: "assistant",
-      content: `Заполнил пример «${demo.label}». Проверьте параметры и подтвердите подбор.`,
-    });
+    setPanelTab("results");
+    void confirm(meta.demos[index].query);
   }
   const totalCost = sessionUsage.reduce(
     (sum, u) => sum + (u.estimatedCostUsd ?? 0),
@@ -531,7 +525,10 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
                 </div>
               ))}
             {!started && (
-              <div className="chat-examples">
+              <div
+                className="chat-examples"
+                aria-label="Готовые запросы — нажмите, чтобы найти варианты"
+              >
                 {meta.demos.map((demo, i) => (
                   <button
                     key={demo.label}
@@ -731,10 +728,17 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
                   type="button"
                   className={`icon-button ${recording ? "recording" : ""}`}
                   aria-label={`${micLabel} в чате`}
+                  aria-pressed={recording}
                   disabled={micDisabled}
                   onClick={() => void voice.toggle()}
                 >
-                  {recording ? <Square size={17} /> : <Mic size={18} />}
+                  {recording ? (
+                    <Square size={17} />
+                  ) : voiceProcessing || voice.state === "permission" ? (
+                    <LoaderCircle size={18} className="spin" />
+                  ) : (
+                    <Mic size={18} />
+                  )}
                 </button>
                 <button
                   className="send-button"
@@ -746,6 +750,34 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
                 </button>
               </div>
             </form>
+            {voice.state !== "idle" && (
+              <div className="composer-voice-status" role="status">
+                <span>
+                  {recording ? (
+                    <>
+                      <i className="record-dot" />
+                      {Math.floor(voice.seconds / 60)}:
+                      {String(voice.seconds % 60).padStart(2, "0")} · Нажмите
+                      микрофон, чтобы отправить
+                    </>
+                  ) : voice.state === "permission" ? (
+                    "Разрешите микрофон в браузере"
+                  ) : (
+                    "Обрабатываю запись…"
+                  )}
+                </span>
+                {(recording || voice.state === "permission") && (
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={voice.cancel}
+                    aria-label="Отменить запись"
+                  >
+                    Отменить
+                  </button>
+                )}
+              </div>
+            )}
             <p className="privacy-note">
               До 60 секунд · аудио отправляется в OpenAI для распознавания
             </p>
@@ -812,48 +844,6 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
           onAI={setUseAI}
         />
       </dialog>
-      <div className="floating-voice">
-        <div className="voice-status" role="status">
-          {recording ? (
-            <>
-              <span className="record-dot" /> 00:
-              {String(voice.seconds).padStart(2, "0")}{" "}
-              <span>Нажмите, чтобы отправить</span>
-            </>
-          ) : voice.state === "permission" ? (
-            "Разрешите микрофон в браузере"
-          ) : voiceProcessing ? (
-            "Обрабатываю запись…"
-          ) : (
-            "Можно голосом"
-          )}
-        </div>
-        {(recording || voice.state === "permission") && (
-          <button
-            className="voice-cancel icon-button"
-            aria-label="Отменить запись"
-            onClick={voice.cancel}
-          >
-            <X size={18} />
-          </button>
-        )}
-        <button
-          type="button"
-          className={`voice-button ${recording ? "recording" : ""}`}
-          aria-label={micLabel}
-          aria-pressed={recording}
-          disabled={micDisabled}
-          onClick={() => void voice.toggle()}
-        >
-          {recording ? (
-            <Square size={23} fill="currentColor" />
-          ) : voiceProcessing || voice.state === "permission" ? (
-            <LoaderCircle size={24} className="spin" />
-          ) : (
-            <AudioLines size={27} />
-          )}
-        </button>
-      </div>
       {toast && (
         <div className="ready-toast" role="status">
           <button onClick={() => jump(toast.target)}>
