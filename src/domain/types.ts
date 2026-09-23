@@ -28,11 +28,7 @@ export interface SearchQuery {
 }
 
 export type RejectionReason =
-  | "busy_date"
-  | "over_budget"
-  | "event_format"
-  | "language"
-  | "duration";
+  "busy_date" | "over_budget" | "event_format" | "language" | "duration";
 
 export interface MatchEvidence {
   criterion: string;
@@ -72,4 +68,3 @@ export interface ModelUsage {
   /** An estimate, not an invoice. Null when model pricing is unknown. */
   estimatedCostUsd: number | null;
 }
-

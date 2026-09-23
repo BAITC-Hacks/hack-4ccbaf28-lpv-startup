@@ -7,23 +7,27 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "test": "node --import tsx --test tests/*.test.ts",
-    "typecheck": "tsc --noEmit",
-    "data:import": "node --import tsx scripts/import-catalog.ts"
+    "typecheck": "next typegen && tsc --noEmit",
+    "data:import": "node --import tsx scripts/import-catalog.ts",
+    "format": "prettier --write src scripts tests next.config.ts tsconfig.json package.json",
+    "format:check": "prettier --check src scripts tests next.config.ts tsconfig.json package.json"
   },
   "dependencies": {
+    "@fontsource-variable/manrope": "5.3.0",
+    "lucide-react": "1.47.0",
     "next": "16.3.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "zod": "4.6.5",
-    "lucide-react": "1.47.0"
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "typescript": "7.0.2",
     "@types/node": "26.6.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "csv-parse": "7.0.2",
+    "prettier": "3.9.9",
     "tsx": "4.23.15",
-    "csv-parse": "7.0.2"
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": ">=22"
