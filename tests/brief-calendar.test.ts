@@ -6,6 +6,7 @@ import {
   canApplyBrief,
   sameBrief,
 } from "../src/domain/brief";
+import { almatyDate } from "../src/domain/dates";
 import { querySchema } from "../src/domain/schema";
 import { availabilityCalendar } from "../src/domain/calendar";
 import {
@@ -25,25 +26,18 @@ after(() => {
   else process.env.OPENAI_API_KEY = previousKey;
 });
 
-test("quick requests show their date, follow Almaty midnight, and remain explicit outside the catalog calendar", () => {
-  const before = getMeta(new Date("2026-09-23T18:59:00Z"));
-  const after = getMeta(new Date("2026-09-23T19:01:00Z"));
-  for (const demo of before.demos) {
-    assert.equal(demo.query.date, "2026-09-23");
-    assert.match(demo.detail, /Сегодня, 23 сентября/);
+test("October examples stay explicit while relative dates follow the real Almaty day", () => {
+  assert.equal(almatyDate(new Date("2026-09-23T18:59:00Z")), "2026-09-23");
+  assert.equal(almatyDate(new Date("2026-09-23T19:01:00Z")), "2026-09-24");
+  for (const demo of getMeta().demos) {
+    assert.equal(demo.query.date, "2026-10-15");
+    assert.match(demo.detail, /15 октября 2026/);
+    assert.doesNotMatch(demo.detail, /Сегодня/);
+    assert.ok(querySchema.safeParse(demo.query).success);
     assert.equal(demo.query.language, undefined);
     assert.equal(demo.query.hours, undefined);
     assert.equal(demo.query.preferences, undefined);
     assert.ok(search(catalog, demo.query).matches.length <= 3);
-  }
-  for (const demo of after.demos) {
-    assert.equal(demo.query.date, "2026-09-24");
-    assert.match(demo.detail, /Сегодня, 24 сентября/);
-  }
-  for (const demo of getMeta(new Date("2027-01-01T12:00:00Z")).demos) {
-    assert.ok(querySchema.safeParse(demo.query).success);
-    assert.match(demo.detail, /Пример:.*2026/);
-    assert.doesNotMatch(demo.detail, /Сегодня/);
   }
 });
 

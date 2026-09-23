@@ -83,8 +83,8 @@ export default function BriefForm({
           <SlidersHorizontal size={19} />
         </div>
         <div>
-          <h2 id="brief-title">Ваша заявка</h2>
-          <p>Заполните сами или расскажите ассистенту</p>
+          <h2 id="brief-title">Ручной режим</h2>
+          <p>Выберите условия — результаты появятся ниже</p>
         </div>
         <button
           type="button"
@@ -225,7 +225,7 @@ export default function BriefForm({
           ) : (
             <ArrowRight size={18} />
           )}{" "}
-          Подтвердить и подобрать
+          Найти до 3 вариантов
         </button>
         <p className="form-footnote">
           До 3 вариантов · цены от · без бронирования

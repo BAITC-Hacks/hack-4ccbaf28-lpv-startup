@@ -24,16 +24,16 @@ The live command fails if AI silently falls back on the first scenario, if any r
 
 ## What to demonstrate to judges
 
-Start-screen shortcuts use the explicitly displayed current date and search immediately when clicked. The fixed October dates below keep the acceptance report reproducible; set them in **Параметры**.
+Start-screen shortcuts explicitly display 15 October 2026 and search immediately. Chat selections appear inside their assistant answers; manual results appear below filters in the same dialog. Each search returns at most three cards, even when chat history contains several searches. Use **Ручной режим** for the exact acceptance parameters below.
 
 | Requirement | Live action | Expected result |
 | --- | --- | --- |
-| Dense category, individual explanations | Open **Параметры**: Алматы, Ведущий, корпоратив, 15 October, 1 million ₸, русский, 6 hours, preferences «Интеллигентная, ненавязчивая подача и живой юмор»; confirm | Three cards for Алматы, 15 October, budget 1 million ₸; each has a different factual detail from its own description |
-| Same request, same order | Click **Подобрать варианты** again without editing | Same IDs and order; repeated model request is cached |
-| Two dates, changed availability | **Параметры** → date 17 October → confirm | Мицури Канроджи is excluded because that date is in their busy calendar; the UI explicitly explains the change |
-| Rare category | **Параметры**: Алматы, Флорист, корпоратив, 15 October, 400,000 ₸, no language/hours constraints; confirm | One suitable florist; no invented second/third profile, with an explicit explanation that no other profile passes all constraints |
+| Dense category, individual explanations | Open **Ручной режим**: Алматы, Ведущий, корпоратив, 15 October, 1 million ₸, русский, 6 hours, preferences «Интеллигентная, ненавязчивая подача и живой юмор»; confirm | Three cards for Алматы, 15 October, budget 1 million ₸; each has a different factual detail from its own description |
+| Same request, same order | In **Ручной режим**, click **Найти до 3 вариантов** again without editing | Same IDs and order; repeated model request is cached |
+| Two dates, changed availability | **Ручной режим** → date 17 October → confirm | Мицури Канроджи is excluded because that date is in their busy calendar; the UI explicitly explains the change |
+| Rare category | **Ручной режим**: Алматы, Флорист, корпоратив, 15 October, 400,000 ₸, no language/hours constraints; confirm | One suitable florist; no invented second/third profile, with an explicit explanation that no other profile passes all constraints |
 | Candidates exist but fail | Reuse all parameters from the dense-category scenario, reduce the budget to 100,000 ₸ and confirm | No matches, reasons and individually verified alternative changes |
-| Category absent in city | Parameters: Зарубежье, Флорист, корпоратив, 15 October, 400,000 ₸ | Explicitly says the city has no such category; not an error or empty screen |
+| Category absent in city | **Ручной режим**: Зарубежье, Флорист, корпоратив, 15 October, 400,000 ₸ | Explicitly says the city has no such category; not an error or empty screen |
 | Understandable pipeline | **Модели и расход API**, **Почему подходит и анкета** | Routing, measured tokens/time, hard-filter evidence and the original description are visible |
 
 ## Non-interchangeable explanations
@@ -50,7 +50,7 @@ The engine first removes greeting/contact filler, identifies exact source fragme
 
 See `DOD-RESULTS.json` for exact parameters, identities, source facts, time, token usage and busy identities. On 23 September 2026 the real-API six-scenario run passed: 3.541 seconds maximum, 12 ms for the cached repeat, 1.349 seconds for the rare category. Estimated text-model cost for that evaluation: approximately $0.00290. Network and provider latency can vary; a 6.5-second model timeout preserves a deterministic local response if the provider is unavailable.
 
-27 tests also cover malformed arguments, source checking, all 100 calendar dates, all hard constraints across the organizer's profiles, normalized matching, stable tie-breaking, API failures, local favorites validation and three result types.
+28 tests also cover malformed arguments, source checking, all 100 calendar dates, all hard constraints across the organizer's profiles, normalized matching, stable tie-breaking, API failures, local favorites validation and three result types.
 
 ## Scope boundaries
 

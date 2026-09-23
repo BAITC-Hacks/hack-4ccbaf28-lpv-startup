@@ -8,10 +8,10 @@ import {
   Sparkles,
   Wallet,
 } from "lucide-react";
-import type { RefObject } from "react";
 import type { SearchResponse } from "@/domain/api";
 import type { Favorite } from "@/domain/favorites";
 import type { RankedMatch, SearchQuery } from "@/domain/types";
+import { selectionTitle } from "@/domain/conversation";
 import { money } from "@/domain/matching";
 import { dateLabel } from "./availability-calendar";
 import ContractorCard from "./contractor-card";
@@ -22,25 +22,20 @@ const reasons = {
   language: "другой язык",
   duration: "недостаточно часов",
 };
-export type PanelTab = "results" | "favorites";
 export default function ResultsPane({
   result,
   favorites,
-  tab,
-  onTab,
+  layout = "chat",
   onToggleFavorite,
   onSearch,
   onEdit,
   busy,
-  changed,
-  dateChange,
-  panelRef,
-  mobileVisible,
+  changed = false,
+  dateChange = "",
 }: {
   result: SearchResponse | null;
   favorites: Favorite[];
-  tab: PanelTab;
-  onTab: (tab: PanelTab) => void;
+  layout?: "chat" | "manual" | "favorites";
   onToggleFavorite: (
     match: RankedMatch,
     query: SearchQuery,
@@ -49,41 +44,20 @@ export default function ResultsPane({
   onSearch: (query: SearchQuery) => void;
   onEdit: () => void;
   busy: boolean;
-  changed: boolean;
-  dateChange: string;
-  panelRef: RefObject<HTMLElement | null>;
-  mobileVisible: boolean;
+  changed?: boolean;
+  dateChange?: string;
 }) {
   const saved = (id: string) =>
     favorites.some((f) => f.match.contractor.id === id);
   return (
     <section
-      className={`results-pane ${mobileVisible ? "mobile-visible" : ""}`}
-      ref={panelRef}
-      aria-label="Панель подбора"
-      id="results"
+      className={`results-pane inline-results ${layout}-results`}
+      aria-label={
+        layout === "favorites" ? "Избранные анкеты" : "Результаты подбора"
+      }
     >
-      <div className="results-tabs" role="tablist" aria-label="Карточки">
-        <button
-          role="tab"
-          aria-selected={tab === "results"}
-          onClick={() => onTab("results")}
-        >
-          Подбор{" "}
-          {result?.result.status === "matched" && (
-            <span>{result.result.matches.length}</span>
-          )}
-        </button>
-        <button
-          role="tab"
-          aria-selected={tab === "favorites"}
-          onClick={() => onTab("favorites")}
-        >
-          <Heart size={14} /> Избранное <span>{favorites.length}</span>
-        </button>
-      </div>
       <div className="results-scroll">
-        {tab === "favorites" ? (
+        {layout === "favorites" ? (
           <>
             <div className="results-heading">
               <div>
@@ -130,10 +104,7 @@ export default function ResultsPane({
                   Нажмите сердечко на карточке. Она останется здесь даже после
                   перезагрузки страницы.
                 </p>
-                <button
-                  className="button secondary"
-                  onClick={() => onTab("results")}
-                >
+                <button className="button secondary" onClick={onEdit}>
                   К подбору
                 </button>
               </div>
@@ -146,7 +117,7 @@ export default function ResultsPane({
                 <p className="eyebrow">ВЫБРАНО ИЗ КАТАЛОГА</p>
                 <h2>
                   {result.result.status === "matched"
-                    ? "Ваши совпадения"
+                    ? selectionTitle(result.result.matches.length)
                     : "Найдём другой подход"}
                 </h2>
               </div>
@@ -162,13 +133,13 @@ export default function ResultsPane({
                 {money(result.query.budget_kzt)}
               </span>
             </div>
-            <div className="result-change-slot">
-              {changed && (
+            {changed && (
+              <div className="result-change-slot">
                 <span className="changed-badge">
                   Параметры изменены — подтвердите новый подбор
                 </span>
-              )}
-            </div>
+              </div>
+            )}
             {dateChange && (
               <p className="info-note">
                 <CalendarDays size={16} />
@@ -179,11 +150,9 @@ export default function ResultsPane({
             {result.result.status === "matched" ? (
               <>
                 <p className="results-caption">
-                  {result.result.matches.length} из{" "}
-                  {result.result.totalEligible} подходящих анкет.
                   {result.result.totalEligible < 3
                     ? " Других, проходящих все условия, нет."
-                    : " Сначала — наиболее близкие вашим пожеланиям."}{" "}
+                    : " "}{" "}
                   Все изображения — AI-иллюстрации.
                 </p>
                 <div className="cards-grid">
@@ -219,7 +188,7 @@ export default function ResultsPane({
                     : `В городе есть ${result.result.candidatesInCity} анкет этой категории, но выбранные ограничения исключают их все. Причины — ниже.`}
                 </p>
                 <button className="button secondary" onClick={onEdit}>
-                  Изменить параметры <ArrowUp size={14} />
+                  Изменить условия <ArrowUp size={14} />
                 </button>
               </div>
             )}
@@ -294,7 +263,7 @@ export default function ResultsPane({
               объяснением, почему они подходят именно вам.
             </p>
             <button className="button secondary" onClick={onEdit}>
-              К параметрам
+              К выбору условий
             </button>
           </div>
         )}

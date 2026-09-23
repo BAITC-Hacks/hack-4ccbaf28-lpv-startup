@@ -34,7 +34,12 @@ import { querySchema } from "@/domain/schema";
 import { money } from "@/domain/matching";
 import Calendar, { dateLabel } from "./availability-calendar";
 import BriefForm, { Choice, type SetBriefField } from "./brief-form";
-import ResultsPane, { type PanelTab } from "./results-pane";
+import ResultsPane from "./results-pane";
+import {
+  conversationContext,
+  selectionTitle,
+  type ConversationEntry,
+} from "@/domain/conversation";
 import {
   FAVORITES_KEY,
   readFavorites,
@@ -83,7 +88,7 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
   const briefRef = useRef<Brief>({});
   const revision = useRef(0);
   const [result, setResult] = useState<SearchResponse | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([welcome]);
+  const [messages, setMessages] = useState<ConversationEntry[]>([welcome]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState<"brief" | "search" | "voice" | null>(null);
   const [error, setError] = useState("");
@@ -98,18 +103,21 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
   const [started, setStarted] = useState(false);
   const voiceContext = useRef({ brief: {} as Brief, revision: 0 });
   const workspace = useRef<HTMLDivElement>(null);
-  const results = useRef<HTMLElement>(null);
   const log = useRef<HTMLDivElement>(null);
   const traceDialog = useRef<HTMLDialogElement>(null);
   const resultHistory = useRef<SearchResponse | null>(null);
-  const [dateChange, setDateChange] = useState("");
   const [customBudget, setCustomBudget] = useState("");
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const favoritesRef = useRef<Favorite[]>([]);
-  const [panelTab, setPanelTab] = useState<PanelTab>("results");
-  const [mobilePane, setMobilePane] = useState<"chat" | "results">("chat");
-  const [panelOpen, setPanelOpen] = useState(false);
   const briefDialog = useRef<HTMLDialogElement>(null);
+  const favoritesDialog = useRef<HTMLDialogElement>(null);
+  const manualResults = useRef<HTMLDivElement>(null);
+  const manualInitialized = useRef(false);
+  const [manualBrief, setManualBrief] = useState<Brief>({});
+  const [manualResult, setManualResult] = useState<SearchResponse | null>(null);
+  const [manualError, setManualError] = useState("");
+  const [manualDateChange, setManualDateChange] = useState("");
+  const [latestSearch, setLatestSearch] = useState<SearchResponse | null>(null);
   const autoScroll = useRef(true);
   useEffect(() => {
     try {
@@ -145,11 +153,27 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
       );
     }
   }
-  function openPanel(tab: PanelTab) {
-    setPanelTab(tab);
-    setPanelOpen(true);
-    setMobilePane("results");
+  function openManual(query?: Brief) {
+    if (query || !manualInitialized.current) {
+      setManualBrief({ ...(query ?? briefRef.current) });
+      setManualResult(null);
+      setManualDateChange("");
+      manualInitialized.current = true;
+    }
+    setManualError("");
+    briefDialog.current?.showModal();
   }
+  const setManual: SetBriefField = (key, value) => {
+    setManualBrief((previous) => {
+      const next = { ...previous, [key]: value };
+      if (value === undefined || value === "") delete next[key];
+      return next;
+    });
+  };
+  useEffect(() => {
+    if (manualResult && briefDialog.current?.open)
+      manualResults.current?.scrollIntoView({ block: "start" });
+  }, [manualResult]);
 
   function applyBrief(next: Brief) {
     revision.current++;
@@ -163,7 +187,7 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
     if (value === undefined || value === "") delete next[key];
     applyBrief(next);
   };
-  function append(...items: ChatMessage[]) {
+  function append(...items: ConversationEntry[]) {
     setMessages((previous) => [...previous, ...items].slice(-18));
   }
   function addUsage(items: ModelUsage[]) {
@@ -173,19 +197,23 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
     setToast({ text, target });
   }
   function jump(target: "brief" | "results") {
-    // Voice responses never switch tabs or scroll results. Only this explicit click does.
-    if (target === "results") openPanel("results");
-    else {
-      setMobilePane("chat");
-      autoScroll.current = true;
-      if (log.current) log.current.scrollTop = log.current.scrollHeight;
-    }
+    autoScroll.current = true;
+    if (target === "results") {
+      const selections =
+        log.current?.querySelectorAll<HTMLElement>("[data-selection]");
+      selections?.[selections.length - 1]?.scrollIntoView({ block: "start" });
+    } else if (log.current) log.current.scrollTop = log.current.scrollHeight;
     setToast(null);
   }
   useEffect(() => {
-    if (started && autoScroll.current && log.current)
-      log.current.scrollTop = log.current.scrollHeight;
-  }, [messages, busy, pending, brief, started, mobilePane]);
+    if (!started || !autoScroll.current || !log.current) return;
+    const last = messages[messages.length - 1];
+    if (last?.selection && !busy) {
+      const selections =
+        log.current.querySelectorAll<HTMLElement>("[data-selection]");
+      selections[selections.length - 1]?.scrollIntoView({ block: "start" });
+    } else log.current.scrollTop = log.current.scrollHeight;
+  }, [messages, busy, pending, brief, started]);
 
   async function extract(
     message: string,
@@ -197,7 +225,7 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
     const data = await post<BriefResponse>("/api/brief", {
       message,
       brief: snapshot,
-      history: messages.slice(-4),
+      history: conversationContext(messages),
     });
     addUsage(data.usage);
     if (canApplyBrief(requestRevision, revision.current)) {
@@ -285,33 +313,44 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
   const field = missingFields(brief)[0];
   const changed = result && !sameBrief(brief, result.query);
 
-  async function confirm(override?: SearchQuery) {
+  async function confirm(
+    override?: SearchQuery,
+    target: "chat" | "manual" = "chat",
+  ) {
     if (locked) return;
-    const parsed = querySchema.safeParse(override ?? briefRef.current);
+    const parsed = querySchema.safeParse(
+      override ?? (target === "manual" ? manualBrief : briefRef.current),
+    );
     if (!parsed.success) {
-      setError(
+      (target === "manual" ? setManualError : setError)(
         "Проверьте поля: нужны город, категория, формат, дата 23.09–31.12.2026 и положительный бюджет.",
       );
       return;
     }
-    if (override) applyBrief(override);
-    briefDialog.current?.close();
-    autoScroll.current = true;
+    if (override) {
+      if (target === "manual") setManualBrief(override);
+      else applyBrief(override);
+    }
+    autoScroll.current = target === "chat";
     setBusy("search");
     setError("");
-    setPending(null);
-    setStarted(true);
-    setShowCalendar(false);
-    append({
-      role: "user",
-      content: `Подтверждаю: ${parsed.data.category}, ${parsed.data.city}, ${dateLabel(parsed.data.date)}, до ${money(parsed.data.budget_kzt)}.`,
-    });
+    setManualError("");
+    if (target === "chat") {
+      setPending(null);
+      setStarted(true);
+      setShowCalendar(false);
+      append({
+        role: "user",
+        content: `Подтверждаю: ${parsed.data.category}, ${parsed.data.city}, ${dateLabel(parsed.data.date)}, до ${money(parsed.data.budget_kzt)}.`,
+      });
+    }
     try {
       const data = await post<SearchResponse>("/api/search", {
         query: parsed.data,
         useAI,
       });
-      const previous = resultHistory.current;
+      const previous =
+        target === "manual" ? manualResult : resultHistory.current;
       let changeNote = "";
       if (
         previous &&
@@ -325,21 +364,29 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
         if (nowBusy.length)
           changeNote = `На ${dateLabel(data.query.date)} ${nowBusy.map((m) => m.contractor.anon_name).join(", ")} заняты по календарю каталога и исключены из подбора.`;
       }
-      setDateChange(changeNote);
-      resultHistory.current = data;
-      setResult(data);
-      setPanelOpen(true);
+      setLatestSearch(data);
       addUsage(data.usage);
-      const message =
-        data.result.status === "matched"
-          ? `Готово: показаны ${data.result.matches.length} из ${data.result.totalEligible} подходящих вариантов. Все проходят обязательные ограничения.${data.alternatives.length ? " Есть альтернативы по дате или бюджету — они под карточками." : ""}`
-          : data.result.status === "no_category"
-            ? "В этом городе пока нет анкет выбранной категории. Попробуйте другой город или категорию."
-            : "Ни один из подрядчиков не проходит все ограничения. Под результатами — причины и проверенные альтернативы.";
-      append({ role: "assistant", content: message });
-      notify("Подбор готов. Посмотреть варианты", "results");
+      if (target === "manual") {
+        setManualDateChange(changeNote);
+        setManualResult(data);
+      } else {
+        resultHistory.current = data;
+        setResult(data);
+        const message =
+          data.result.status === "matched"
+            ? `${selectionTitle(data.result.matches.length)}.`
+            : data.result.status === "no_category"
+              ? "В этом городе пока нет анкет выбранной категории."
+              : "По этим условиям подходящих вариантов нет.";
+        append({
+          role: "assistant",
+          content: message,
+          selection: data,
+          dateChange: changeNote,
+        });
+      }
     } catch (e) {
-      setError(errorText(e));
+      (target === "manual" ? setManualError : setError)(errorText(e));
     } finally {
       setBusy(null);
     }
@@ -347,10 +394,6 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
   function reset() {
     setResult(null);
     resultHistory.current = null;
-    setDateChange("");
-    setPanelOpen(false);
-    setMobilePane("chat");
-    setPanelTab("results");
     autoScroll.current = true;
     applyBrief({});
     setStarted(false);
@@ -360,8 +403,6 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
     setToast(null);
   }
   function useDemo(index: number) {
-    setMobilePane("chat");
-    setPanelTab("results");
     void confirm(meta.demos[index].query);
   }
   const totalCost = sessionUsage.reduce(
@@ -400,7 +441,8 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
         <div className="header-actions">
           <button
             className="text-button"
-            onClick={() => openPanel("favorites")}
+            aria-label={`Избранное: ${favorites.length}`}
+            onClick={() => favoritesDialog.current?.showModal()}
           >
             <Heart size={15} /> <span>Избранное</span>
             <b>{favorites.length}</b>
@@ -423,38 +465,8 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
         </div>
       </header>
       <div
-        className="mobile-pane-tabs"
-        role="tablist"
-        aria-label="Рабочее пространство"
-      >
-        <button
-          role="tab"
-          aria-selected={mobilePane === "chat"}
-          onClick={() => setMobilePane("chat")}
-        >
-          <Sparkles size={14} /> Чат
-        </button>
-        <button
-          role="tab"
-          aria-selected={mobilePane === "results" && panelTab === "results"}
-          onClick={() => openPanel("results")}
-        >
-          Подбор{" "}
-          {result?.result.matches.length
-            ? `· ${result.result.matches.length}`
-            : ""}
-        </button>
-        <button
-          role="tab"
-          aria-selected={mobilePane === "results" && panelTab === "favorites"}
-          onClick={() => openPanel("favorites")}
-        >
-          <Heart size={13} /> {favorites.length}
-        </button>
-      </div>
-      <div
         id="workspace"
-        className={`ai-workspace ${panelOpen ? "has-results" : ""} ${mobilePane === "chat" ? "mobile-chat" : "mobile-results"}`}
+        className="ai-workspace conversation-workspace"
         ref={workspace}
       >
         <section
@@ -475,12 +487,8 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
                     : "Помогу выбрать. Объясню почему."}
               </p>
             </div>
-            <button
-              className="brief-edit-button"
-              onClick={() => briefDialog.current?.showModal()}
-            >
-              <SlidersHorizontal size={14} /> Параметры{" "}
-              <span>{5 - missingFields(brief).length}/5</span>
+            <button className="brief-edit-button" onClick={() => openManual()}>
+              <SlidersHorizontal size={14} /> Ручной режим
             </button>
           </div>
           <div className="context-strip" aria-label="Текущие параметры">
@@ -517,11 +525,27 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
             {messages
               .filter((_, i) => started || i !== 0)
               .map((m, i) => (
-                <div key={i} className={`message ${m.role}`}>
+                <div
+                  key={i}
+                  className={`message ${m.role} ${m.selection ? "selection-message" : ""}`}
+                  data-selection={m.selection ? "true" : undefined}
+                >
                   <span className="message-author">
                     {m.role === "assistant" ? "LPV ASSISTANT" : "ВЫ"}
                   </span>
                   <p>{m.content}</p>
+                  {m.selection && (
+                    <ResultsPane
+                      layout="chat"
+                      result={m.selection}
+                      favorites={favorites}
+                      onToggleFavorite={toggleFavorite}
+                      onSearch={(query) => void confirm(query)}
+                      onEdit={() => openManual(m.selection!.query)}
+                      busy={locked}
+                      dateChange={m.dateChange}
+                    />
+                  )}
                 </div>
               ))}
             {!started && (
@@ -582,7 +606,7 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
                 </button>
               </div>
             )}
-            {started && !busy && !pending && (
+            {started && !busy && !pending && (!result || changed) && (
               <div className="chat-controls">
                 <p className="control-question">{briefQuestion(brief)}</p>
                 {showCalendar || field === "date" ? (
@@ -783,28 +807,6 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
             </p>
           </div>
         </section>
-        {panelOpen && (
-          <ResultsPane
-            result={result}
-            favorites={favorites}
-            tab={panelTab}
-            onTab={setPanelTab}
-            onToggleFavorite={toggleFavorite}
-            onSearch={(query) => {
-              setPanelTab("results");
-              void confirm(query);
-            }}
-            onEdit={() => {
-              setMobilePane("chat");
-              briefDialog.current?.showModal();
-            }}
-            busy={locked}
-            changed={!!changed}
-            dateChange={dateChange}
-            panelRef={results}
-            mobileVisible={mobilePane === "results"}
-          />
-        )}
       </div>
       <div className="ai-footer">
         <span>
@@ -818,7 +820,8 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
         </button>
       </div>
       <dialog
-        className="brief-dialog"
+        className="brief-dialog manual-dialog"
+        aria-label="Ручной режим"
         ref={briefDialog}
         onClick={(e) => {
           if (e.target === e.currentTarget) briefDialog.current?.close();
@@ -827,21 +830,78 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
         <div className="brief-dialog-close">
           <button
             className="icon-button"
-            aria-label="Закрыть параметры"
+            aria-label="Закрыть ручной режим"
             onClick={() => briefDialog.current?.close()}
           >
             <X size={20} />
           </button>
         </div>
         <BriefForm
-          brief={brief}
+          brief={manualBrief}
           meta={meta}
-          set={set}
-          onConfirm={() => void confirm()}
-          onReset={reset}
+          set={setManual}
+          onConfirm={() => void confirm(undefined, "manual")}
+          onReset={() => {
+            setManualBrief({});
+            setManualResult(null);
+            setManualDateChange("");
+            setManualError("");
+          }}
           busy={locked}
           useAI={useAI}
           onAI={setUseAI}
+        />
+        {manualError && (
+          <p className="manual-error" role="alert">
+            {manualError}
+          </p>
+        )}
+        <div ref={manualResults} className="manual-result-area">
+          {manualResult && (
+            <ResultsPane
+              layout="manual"
+              result={manualResult}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+              onSearch={(query) => void confirm(query, "manual")}
+              onEdit={() =>
+                briefDialog.current?.scrollTo({ top: 0, behavior: "smooth" })
+              }
+              busy={locked}
+              changed={!sameBrief(manualBrief, manualResult.query)}
+              dateChange={manualDateChange}
+            />
+          )}
+        </div>
+      </dialog>
+      <dialog
+        className="favorites-dialog"
+        ref={favoritesDialog}
+        aria-label="Избранное"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) favoritesDialog.current?.close();
+        }}
+      >
+        <div className="brief-dialog-close">
+          <button
+            className="icon-button"
+            aria-label="Закрыть избранное"
+            onClick={() => favoritesDialog.current?.close()}
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <ResultsPane
+          layout="favorites"
+          result={null}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
+          busy={locked}
+          onSearch={(query) => {
+            favoritesDialog.current?.close();
+            void confirm(query);
+          }}
+          onEdit={() => favoritesDialog.current?.close()}
         />
       </dialog>
       {toast && (
@@ -940,11 +1000,11 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
             </div>
           ))}
         </div>
-        {result && (
+        {latestSearch && (
           <>
             <h3>Последний подбор</h3>
             <ol className="trace-list">
-              {result.trace.map((step, i) => (
+              {latestSearch.trace.map((step, i) => (
                 <li key={i}>
                   <strong>{step.label}</strong>
                   <p>{step.detail}</p>

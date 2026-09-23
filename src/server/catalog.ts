@@ -1,8 +1,6 @@
 import data from "../../data/contractors.json";
 import type { Contractor, SearchQuery } from "../domain/types";
 import type { CatalogMeta } from "../domain/api";
-import { almatyDate } from "../domain/dates";
-import { CALENDAR_START, CALENDAR_END } from "../domain/schema";
 
 export const catalog: Contractor[] = data;
 const unique = (values: string[]) =>
@@ -17,17 +15,9 @@ export const initialQuery: SearchQuery = {
   hours: 6,
   preferences: "Интеллигентная, ненавязчивая подача и живой юмор",
 };
-export function getMeta(now = new Date()): CatalogMeta {
-  const today = almatyDate(now);
-  const inCalendar = today >= CALENDAR_START && today <= CALENDAR_END;
-  const date = inCalendar ? today : initialQuery.date;
-  const dateText = new Intl.DateTimeFormat("ru-RU", {
-    day: "numeric",
-    month: "long",
-    ...(!inCalendar ? { year: "numeric" as const } : {}),
-    timeZone: "Asia/Almaty",
-  }).format(new Date(`${date}T12:00:00Z`));
-  const when = `${inCalendar ? "Сегодня, " : "Пример: "}${dateText}`;
+export function getMeta(): CatalogMeta {
+  const date = initialQuery.date;
+  const when = "15 октября 2026";
   const base: SearchQuery = {
     city: "Алматы",
     date,

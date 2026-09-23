@@ -38,7 +38,7 @@ function illustration(c: Contractor): { src: string; alt: string } {
   const image =
     c.id === "HK-44923"
       ? "host-woman"
-      : c.id === "HK-44733"
+      : ["HK-44733", "HK-29829", "HK-35215"].includes(c.id)
         ? "host-woman-2"
         : "host-man";
   return {
