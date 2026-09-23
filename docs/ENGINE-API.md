@@ -38,6 +38,8 @@ Hard constraints and ordering are never delegated to the model. Eligibility is e
 
 `POST /api/brief` takes `{message, brief, history?}` and returns a partial validated draft plus missing fields and a clarification. Missing facts stay missing. The LLM calls `update_brief`; the endpoint never searches. The UI confirms the draft and then calls `/api/search`.
 
+The chat attaches each search response to its assistant message. `conversationContext` sends only `role` and `content` from the last four messages to `/api/brief`; result attachments and profile data stay out of that conversation history. Manual mode maintains its own draft and results but calls the same `/api/search`. Both modes share local favorites and the AI-explanation setting.
+
 `POST /api/calendar` takes a partial brief and returns 100 days of available counts, minimum starting prices and counts within budget. It does not call a model.
 
 `POST /api/transcribe` accepts multipart `file`, up to 8 MB. The server forwards it to `gpt-4o-mini-transcribe` and returns text and usage. It does not store recordings. The earlier MVP `/api/agent` route was removed to keep one explicit draft → confirmation → search flow.
