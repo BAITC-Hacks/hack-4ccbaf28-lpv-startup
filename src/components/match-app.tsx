@@ -28,6 +28,7 @@ import {
   briefQuestion,
   canApplyBrief,
   missingFields,
+  sameBrief,
   type Brief,
 } from "@/domain/brief";
 import { querySchema } from "@/domain/schema";
@@ -283,8 +284,7 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
   });
   const locked = !!busy || voice.state !== "idle";
   const field = missingFields(brief)[0];
-  const changed =
-    result && JSON.stringify(brief) !== JSON.stringify(result.query);
+  const changed = result && !sameBrief(brief, result.query);
 
   async function confirm(override?: SearchQuery) {
     if (locked) return;
@@ -330,7 +330,6 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
       resultHistory.current = data;
       setResult(data);
       setPanelOpen(true);
-      setPanelTab("results");
       addUsage(data.usage);
       const message =
         data.result.status === "matched"
@@ -759,7 +758,10 @@ export default function MatchApp({ meta }: { meta: CatalogMeta }) {
             tab={panelTab}
             onTab={setPanelTab}
             onToggleFavorite={toggleFavorite}
-            onSearch={(query) => void confirm(query)}
+            onSearch={(query) => {
+              setPanelTab("results");
+              void confirm(query);
+            }}
             onEdit={() => {
               setMobilePane("chat");
               briefDialog.current?.showModal();

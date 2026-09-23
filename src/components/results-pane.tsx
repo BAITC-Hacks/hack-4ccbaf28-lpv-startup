@@ -235,6 +235,15 @@ export default function ResultsPane({
                       </span>
                     ))}
                 </div>
+                {result.availability.busyCandidates.length > 0 && (
+                  <p className="busy-identities">
+                    На {dateLabel(result.query.date)} заняты:{" "}
+                    {result.availability.busyCandidates
+                      .map((c) => c.name)
+                      .join(", ")}
+                    .
+                  </p>
+                )}
                 <p>
                   У одной анкеты может быть несколько причин. Занятые на
                   выбранную дату исключаются всегда.

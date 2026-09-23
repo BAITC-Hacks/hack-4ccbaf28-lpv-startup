@@ -75,7 +75,18 @@ export async function updateBrief(
   if (!call?.arguments) throw new Error("INVALID_TOOL_CALL");
   const args = z
     .object({
-      brief: z.record(z.string(), z.unknown()),
+      brief: z
+        .object({
+          city: z.string().nullable(),
+          date: z.string().nullable(),
+          category: z.string().nullable(),
+          event_format: z.string().nullable(),
+          budget_kzt: z.number().nullable(),
+          language: z.string().nullable(),
+          hours: z.number().nullable(),
+          preferences: z.string().nullable(),
+        })
+        .strict(),
       question: z.string().max(600).nullable(),
     })
     .strict()

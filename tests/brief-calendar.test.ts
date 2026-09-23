@@ -1,6 +1,11 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { briefSchema, missingFields, canApplyBrief } from "../src/domain/brief";
+import {
+  briefSchema,
+  missingFields,
+  canApplyBrief,
+  sameBrief,
+} from "../src/domain/brief";
 import { availabilityCalendar } from "../src/domain/calendar";
 import {
   alternatives,
@@ -28,6 +33,20 @@ test("empty and partial briefs retain missing fields; invalid values never becom
   assert.equal(briefSchema.safeParse({ budget_kzt: 0 }).success, false);
   assert.equal(canApplyBrief(3, 4), false);
   assert.equal(canApplyBrief(4, 4), true);
+  assert.equal(
+    sameBrief(
+      { city: "Алматы", date: "2026-10-15" },
+      { date: "2026-10-15", city: "Алматы", preferences: "" },
+    ),
+    true,
+  );
+  assert.equal(
+    sameBrief(
+      { city: "Алматы", date: "2026-10-15" },
+      { city: "Алматы", date: "2026-10-17" },
+    ),
+    false,
+  );
 });
 
 test("agent saves partial extraction without automatically searching or adding defaults", async (t) => {
@@ -65,6 +84,32 @@ test("agent saves partial extraction without automatically searching or adding d
   assert.equal(result.brief.date, undefined);
   assert.equal(result.brief.budget_kzt, undefined);
   assert.equal("result" in result, false);
+});
+
+test("malformed tool arguments cannot bypass date validation or silently clear confirmed fields", async (t) => {
+  let broken: unknown = {
+    brief: { ...initialQuery, date: "2028-01-01" },
+    question: null,
+  };
+  t.mock.method(globalThis, "fetch", async () =>
+    Response.json({
+      status: "completed",
+      output: [
+        {
+          type: "function_call",
+          name: "update_brief",
+          arguments: JSON.stringify(broken),
+        },
+      ],
+    }),
+  );
+  await assert.rejects(() =>
+    updateBrief("Тест недопустимой даты", initialQuery),
+  );
+  broken = { brief: { city: "Астана" }, question: null };
+  await assert.rejects(() =>
+    updateBrief("Тест пропущенных полей инструмента", initialQuery),
+  );
 });
 
 test("calendar prices match available supply with all non-budget constraints for every date", () => {

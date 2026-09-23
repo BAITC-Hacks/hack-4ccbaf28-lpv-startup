@@ -251,25 +251,3 @@ export function alternatives(
   }
   return result;
 }
-
-export function excerpts(description: string): string[] {
-  // Split only at sentence boundaries; keep exact catalog substrings for citation checks.
-  return description
-    .split(/(?<=[.!?])\s+|[•\n]/)
-    .map((s) => s.trim())
-    .filter((s) => s.length >= 25 && s.length <= 250)
-    .slice(0, 18);
-}
-
-export function localExplanation(match: RankedMatch, q: SearchQuery): string {
-  const c = match.contractor;
-  const quotes = excerpts(c.description);
-  const wanted = facets.filter((f) =>
-    f.query.test(normalize(q.preferences ?? "")),
-  );
-  const quote =
-    quotes.find((s) => wanted.some((f) => f.profile.test(normalize(s)))) ??
-    quotes[0] ??
-    c.description.slice(0, 240);
-  return `От ${money(c.price_from_kzt)}; подходит по формату «${q.event_format}»${q.language ? ` и языку (${q.language})` : ""}. Из анкеты: «${quote}»`;
-}

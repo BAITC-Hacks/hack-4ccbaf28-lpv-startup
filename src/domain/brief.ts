@@ -43,3 +43,16 @@ export function canApplyBrief(
 ): boolean {
   return requestRevision === currentRevision;
 }
+
+/** Schema parsing can reorder keys without changing the user's selection. */
+export function sameBrief(a: Brief, b: Brief): boolean {
+  const fields: (keyof Brief)[] = [
+    ...requiredFields,
+    "language",
+    "hours",
+    "preferences",
+  ];
+  const value = (v: Brief[keyof Brief]) =>
+    typeof v === "string" ? v.trim() : (v ?? "");
+  return fields.every((field) => value(a[field]) === value(b[field]));
+}

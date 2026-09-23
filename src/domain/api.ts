@@ -14,6 +14,14 @@ export interface SearchResponse {
   query: SearchQuery;
   result: SearchResult;
   explanations: Record<string, string>;
+  explanationEvidence: Record<
+    string,
+    { quote: string; source: "description"; selectedBy: "code" | "model" }
+  >;
+  availability: {
+    date: string;
+    busyCandidates: { id: string; name: string }[];
+  };
   alternatives: Alternative[];
   usage: ModelUsage[];
   trace: TraceStep[];

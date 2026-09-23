@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { runSearch } from "../src/server/search-service";
 import { initialQuery } from "../src/server/catalog";
 import { estimatedCost } from "../src/server/openai";
-import { runAgent } from "../src/server/agent";
 import { checkRequest } from "../src/server/http";
-import { search, excerpts } from "../src/domain/matching";
+import { search } from "../src/domain/matching";
 import { catalog } from "../src/server/catalog";
+import { individualQuotes } from "../src/domain/explanations";
 
 const previousKey = process.env.OPENAI_API_KEY;
 process.env.OPENAI_API_KEY = "test-placeholder";
@@ -30,9 +30,8 @@ test("AI cannot introduce candidates, change ranking, or insert fabricated profi
           {
             id: "HK-44923",
             quote: "Гарантирует бесплатную работу и имеет премию Оскар",
-            reasons: ["budget"],
           },
-          { id: "invented", quote: "Вымышленная анкета", reasons: ["format"] },
+          { id: "invented", quote: "Вымышленная анкета" },
         ],
       }),
     ),
@@ -59,8 +58,14 @@ test("valid quotations are accepted, identical requests are cached without anoth
       JSON.stringify({
         selections: expected.matches.map((m) => ({
           id: m.contractor.id,
-          quote: excerpts(m.contractor.description)[0],
-          reasons: ["budget", "language"],
+          quote: individualQuotes(
+            m.contractor,
+            catalog.filter(
+              (c) =>
+                c.city === query.city && c.categories.includes(query.category),
+            ),
+            query,
+          )[0].quote,
         })),
       }),
     ),
@@ -108,47 +113,6 @@ test("disabled AI and empty supply incur no model calls", async (t) => {
   assert.equal(mock.mock.callCount(), 0);
 });
 
-test("clarification tool returns a question without searching or generating explanations", async (t) => {
-  t.mock.method(globalThis, "fetch", async () =>
-    Response.json({
-      status: "completed",
-      output: [
-        {
-          type: "function_call",
-          name: "ask_clarification",
-          arguments: JSON.stringify({
-            question: "На какую дату планируете событие?",
-          }),
-        },
-      ],
-      usage: { input_tokens: 100, output_tokens: 15 },
-    }),
-  );
-  const result = await runAgent(
-    "Выбери ведущего на неизвестную дату",
-    initialQuery,
-  );
-  assert.ok("clarification" in result);
-  assert.equal(result.usage.length, 1);
-});
-
-test("invalid agent arguments cannot bypass calendar validation", async (t) => {
-  t.mock.method(globalThis, "fetch", async () =>
-    Response.json({
-      status: "completed",
-      output: [
-        {
-          type: "function_call",
-          name: "search_contractors",
-          arguments: JSON.stringify({ ...initialQuery, date: "2028-01-01" }),
-        },
-      ],
-      usage: { input_tokens: 100, output_tokens: 15 },
-    }),
-  );
-  await assert.rejects(() => runAgent("Подбор вне календаря", initialQuery));
-});
-
 test("same browser host is accepted despite internal Next URL; cross-site origin is rejected", () => {
   assert.equal(
     checkRequest(
@@ -182,4 +146,37 @@ test("same browser host is accepted despite internal Next URL; cross-site origin
 test("cost calculation accounts for provider cached input and unknown model prices", () => {
   assert.equal(estimatedCost("gpt-5.4-nano", 1000000, 0, 1000000), 0.02);
   assert.equal(estimatedCost("unknown-model", 1000, 100), null);
+});
+
+test("a real but generic quote cannot replace individual evidence selected by the engine", async (t) => {
+  const query = {
+    ...initialQuery,
+    preferences: "интеллигентный спокойный стиль, проверка общих фраз",
+  };
+  const match = search(catalog, query).matches.find(
+    (m) => m.contractor.id === "HK-77838",
+  )!;
+  const generic =
+    "Профессиональный ведущий с интеллигентной, располагающей и ненавязчивой подачей.";
+  assert.ok(match.contractor.description.includes(generic));
+  t.mock.method(globalThis, "fetch", async () =>
+    envelope(
+      JSON.stringify({
+        selections: [{ id: match.contractor.id, quote: generic }],
+      }),
+    ),
+  );
+  const result = await runSearch(query, true);
+  assert.notEqual(
+    result.explanationEvidence[match.contractor.id].quote,
+    generic,
+  );
+  assert.equal(
+    result.explanationEvidence[match.contractor.id].selectedBy,
+    "code",
+  );
+  assert.match(
+    result.explanationEvidence[match.contractor.id].quote,
+    /актёр театра/,
+  );
 });

@@ -43,6 +43,7 @@ export default function Calendar({
     if (cached) {
       setData(cached);
       setError("");
+      setLoading(false);
       return;
     }
     const controller = new AbortController();
