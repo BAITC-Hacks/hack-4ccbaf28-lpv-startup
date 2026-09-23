@@ -11,7 +11,7 @@ npm run check
 
 `check` runs formatting checks, tests, offline DoD scenarios, the structured query grid, type checking and the production build.
 
-The offline evaluation requires no key. To verify real LLM calls, add your own key to ignored `.env.local` and run:
+The offline evaluation requires no key. The private judge copy includes authorized organizer credentials in `.env`; to verify real LLM calls, run:
 
 ```sh
 npm run verify:dod:live

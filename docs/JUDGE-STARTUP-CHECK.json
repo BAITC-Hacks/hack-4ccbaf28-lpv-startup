@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-09-23T12:49:42.291Z",
+  "passed": true,
+  "source": "Bundled .env in a separate checkout; .env.local absent",
+  "keyIncludedInReport": false,
+  "homepageContainsKey": false,
+  "brief": {
+    "status": "passed",
+    "city": "Алматы",
+    "date": "2026-10-15"
+  },
+  "search": {
+    "status": "passed",
+    "aiAvailable": true,
+    "explanationMode": "ai",
+    "cards": 2,
+    "model": "gpt-5.4-nano"
+  },
+  "audio": {
+    "status": "passed",
+    "fixture": "Previously generated synthetic Russian speech; no physical user microphone",
+    "model": "gpt-4o-mini-transcribe",
+    "transcriptCharacters": 98
+  },
+  "note": "Requires internet access and an active organizer API key with available quota."
+}

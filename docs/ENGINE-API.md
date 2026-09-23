@@ -53,7 +53,7 @@ The chat attaches each search response to its assistant message. `conversationCo
 - `gpt-4o-mini-transcribe`: bounded recorded speech.
 - No LLM for filtering, ranking, calendars, alternatives or empty results.
 - Cache equivalent provider requests for 30 minutes, coalesce concurrent identical requests, and never cache recordings.
-- Model names are configurable server-side; keys never enter the client or the repository.
+- Model names are configurable server-side; keys never enter the browser client. The private judge repository includes an organizer-issued server key in `.env` at the explicit request of the team owner; `.env.local` overrides remain ignored.
 
 The supplied host binds to localhost. Production authentication, per-user quotas and the aggregator's storage/consent policy belong to deployment integration; this prototype does not claim a public multi-user deployment.
 
