@@ -59,7 +59,7 @@ export type SearchResult =
     };
 
 export interface ModelUsage {
-  purpose: "parse_request" | "explain_matches";
+  purpose: "parse_request" | "explain_matches" | "transcribe";
   model: string;
   inputTokens: number;
   outputTokens: number;

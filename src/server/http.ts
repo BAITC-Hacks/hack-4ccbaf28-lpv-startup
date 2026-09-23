@@ -1,5 +1,8 @@
 const recent: number[] = [];
-export function checkRequest(request: Request): Response | null {
+export function checkRequest(
+  request: Request,
+  maxBytes = 16000,
+): Response | null {
   const origin = request.headers.get("origin");
   if (origin) {
     try {
@@ -20,7 +23,7 @@ export function checkRequest(request: Request): Response | null {
       );
     }
   }
-  if (Number(request.headers.get("content-length") ?? 0) > 16000)
+  if (Number(request.headers.get("content-length") ?? 0) > maxBytes)
     return Response.json({ error: "Слишком большой запрос" }, { status: 413 });
   const now = Date.now();
   while (recent.length && recent[0] < now - 60_000) recent.shift();

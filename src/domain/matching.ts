@@ -189,6 +189,21 @@ export function alternatives(
 ): Alternative[] {
   const q = querySchema.parse(input);
   const result: Alternative[] = [];
+  const baseline = search(catalog, q);
+  const baselineCount =
+    baseline.status === "matched" ? baseline.totalEligible : 0;
+  const cheapest = (query: SearchQuery) =>
+    Math.min(
+      ...catalog
+        .filter(
+          (c) =>
+            equals(c.city, query.city) &&
+            has(c.categories, query.category) &&
+            !rejectionReasons(c, query).length,
+        )
+        .map((c) => c.price_from_kzt),
+    );
+  const baselinePrice = cheapest(q);
   for (const offset of [1, -1, 2, -2, 3, -3, 7, -7]) {
     const date = new Date(`${q.date}T12:00:00Z`);
     date.setUTCDate(date.getUTCDate() + offset);
@@ -196,10 +211,16 @@ export function alternatives(
     if (next < CALENDAR_START || next > CALENDAR_END) continue;
     const query = { ...q, date: next };
     const found = search(catalog, query);
-    if (found.status === "matched") {
+    const nextPrice = cheapest(query);
+    if (
+      found.status === "matched" &&
+      (!baselineCount ||
+        nextPrice < baselinePrice ||
+        found.totalEligible > baselineCount)
+    ) {
       result.push({
         kind: "date",
-        label: `Изменить дату на ${next.split("-").reverse().join(".")}`,
+        label: `${next.split("-").reverse().join(".")}: ${Number.isFinite(baselinePrice) && nextPrice < baselinePrice ? `от ${money(nextPrice)} — дешевле на ${money(baselinePrice - nextPrice)}` : `${found.totalEligible} подходящих вариантов`}`,
         query,
         eligible: found.totalEligible,
       });
@@ -218,10 +239,10 @@ export function alternatives(
   for (const price of prices) {
     const query = { ...q, budget_kzt: price };
     const found = search(catalog, query);
-    if (found.status === "matched") {
+    if (found.status === "matched" && found.totalEligible > baselineCount) {
       result.push({
         kind: "budget",
-        label: `Увеличить бюджет до ${money(price)}`,
+        label: `Бюджет ${money(price)}: ${found.totalEligible} вариантов${baselineCount ? ` (+${found.totalEligible - baselineCount})` : ""}`,
         query,
         eligible: found.totalEligible,
       });

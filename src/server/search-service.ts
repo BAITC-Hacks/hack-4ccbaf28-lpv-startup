@@ -40,7 +40,7 @@ export async function runSearch(
     result,
     explanations: {},
     alternatives:
-      result.status === "no_matches" ? alternatives(catalog, query) : [],
+      result.status !== "no_category" ? alternatives(catalog, query) : [],
     usage: [],
     aiAvailable: !!process.env.OPENAI_API_KEY,
     explanationMode: "local",
