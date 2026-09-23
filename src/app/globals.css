@@ -2729,8 +2729,62 @@ dialog h3 {
   flex-shrink: 0;
 }
 .inline-results .alternatives {
-  padding: 16px;
-  margin-top: 17px;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 12px;
+}
+.inline-results .alternatives > div:first-child {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 2px 8px;
+}
+.inline-results .alternatives .assistant-symbol {
+  float: none;
+  grid-row: span 2;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+}
+.inline-results .alternatives .assistant-symbol svg {
+  width: 14px;
+  height: 14px;
+}
+.inline-results .alternatives h3 {
+  font-size: 16px;
+  line-height: 1.3;
+  margin: 0;
+  padding: 0;
+}
+.inline-results .alternatives p {
+  clear: none;
+  max-width: none;
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.inline-results .alternative-options {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+.inline-results .alternative-options button {
+  flex: 1 1 240px;
+  min-width: 0;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+}
+.inline-results .alternative-options button > svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.inline-results .alternative-options button > span {
+  gap: 3px;
+}
+.inline-results .alternative-options strong {
+  line-height: 1.4;
 }
 .inline-results .pane-empty {
   padding: 24px 15px;
