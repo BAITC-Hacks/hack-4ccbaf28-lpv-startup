@@ -1,0 +1,56 @@
+{
+  "verifiedAt": "2026-09-23T12:13:33.947Z",
+  "implementationCommit": "173dad8fbba2bf50b38abdd0be93b51741a27846",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "node": "v26.7.0",
+  "npm": "11.19.0",
+  "setup": {
+    "clone": "Independent local git clone --no-hardlinks; no copied node_modules or build output",
+    "install": "npm ci --offline --no-audit --no-fund",
+    "installResult": "PASS",
+    "dependencySource": "Local npm package cache; not an empty-cache or second-machine test",
+    "environmentFilePresent": false,
+    "apiKeyAvailable": false
+  },
+  "checks": {
+    "command": "npm run check",
+    "exitCode": 0,
+    "format": "PASS",
+    "tests": {
+      "passed": 39,
+      "failed": 0
+    },
+    "offlineDoD": {
+      "passed": 10,
+      "maxElapsedMs": 17
+    },
+    "specGrid": {
+      "queries": 91800,
+      "checkedCards": 20262,
+      "elapsedMs": 20995
+    },
+    "typecheck": "PASS",
+    "productionBuild": "PASS"
+  },
+  "http": {
+    "homepage": 200,
+    "search": {
+      "status": 200,
+      "result": "matched",
+      "cards": 1,
+      "aiAvailable": false,
+      "explanationMode": "local",
+      "modelCalls": 0,
+      "comparisonSource": "catalog_fields",
+      "explanation": "На 26.12.2026 дата свободна по календарю; от 150 000 ₸ при бюджете 10 000 000 ₸, формат «корпоратив». Единственная анкета этой категории в городе, которая проходит все заданные условия; в описании мало конкретных отличий, особенности стиля и состава услуги не подтверждены."
+    },
+    "briefWithoutKey": 503,
+    "invalidDate": 400
+  },
+  "limits": [
+    "Single macOS machine using a separate clean checkout and dependency installation",
+    "Real API results are recorded separately in DOD-RESULTS.json",
+    "Physical user microphone was not recorded"
+  ]
+}
